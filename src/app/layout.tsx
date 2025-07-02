@@ -1,3 +1,8 @@
+import { ThemeProvider } from "@/components/theme-provider";
+import { MondayContextProvider } from "@/components/monday-context-provider";
+import { QueryProvider } from "@/components/query-provider";
+import { Toaster } from "sonner";
+
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
@@ -23,11 +28,25 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        {children}
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <QueryProvider>
+            <MondayContextProvider>
+              <div className="py-4 px-6 flex flex-col gap-4">
+                {children}
+              </div>
+              <Toaster />
+            </MondayContextProvider>
+          </QueryProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

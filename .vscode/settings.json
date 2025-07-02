@@ -1,0 +1,19 @@
+{
+    "files.exclude": {
+        "node_modules": true,
+        "public": true,
+        ".vscode": true,
+        "favicon.ico": true,
+        ".gitignore": true,
+        "bun.lockb": true,
+        "components.json": true,
+        "eslint.config.mjs": true,
+        "next-env.d.ts": true,
+        "next.config.ts": true,
+        "package-lock.json": true,
+        "package.json": true,
+        "postcss.config.mjs": true,
+        "tsconfig.json": true,
+        ".next": true,
+    }
+}

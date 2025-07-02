@@ -1,0 +1,5 @@
+export const BOARDS = {
+    TAKEOFF: 8593085825,
+    QUOTE: 8546875356,
+    CONTRACT: 9205352398,
+}
