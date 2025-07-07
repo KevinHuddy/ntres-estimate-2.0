@@ -1,13 +1,49 @@
-"use client"
-
 import { MondayClient } from "@ntr.dev/monday-kit";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useMonday } from "@/components/monday-context-provider";
+import { getBoardSettings } from "@/lib/utils";
+
+const client = new MondayClient()
+
+export const useCreateVariable = () => {
+    const { settings } = useMonday()
+    const variables = getBoardSettings(settings, 'VARIABLES')
+    const queryClient = useQueryClient()
+    
+    return useMutation({
+        mutationFn: async ({ 
+            takeoffId,
+            name,
+            value,
+            unit
+        }: { 
+            takeoffId: string,
+            name: string,
+            value: number,
+            unit?: string
+        }) => {
+            const response = await client.items.create({
+                itemName: name,
+                boardId: variables.boardId,
+                columnValues: {
+                    [variables.cols.LINKED_TAKEOFF]: takeoffId,
+                    [variables.cols.VALUE]: value,
+                    [variables.cols.UNIT_TYPE]: unit || null
+                }
+            })
+            return response
+        },
+        onError: (error) => {
+            toast.error(error.message)
+        },
+        onSettled: (data, error, { takeoffId }) => {
+            queryClient.invalidateQueries({ queryKey: ['variables', takeoffId] })  
+        }
+    })
+}
 
 export const useDeleteVariable = () => {
-    const client = new MondayClient('')
-
     const queryClient = useQueryClient();
 
     return useMutation({
@@ -54,7 +90,6 @@ export const useDeleteVariable = () => {
 
 export const useUpdateVariable = () => {
     const { settings, context } = useMonday();
-    const client = new MondayClient()
 
     const queryClient = useQueryClient();
 

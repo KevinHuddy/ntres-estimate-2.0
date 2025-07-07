@@ -66,7 +66,6 @@ export default function TakeoffTable() {
 		if (userIndex !== -1) {
 			takeoffLineItems[userIndex] = updated;
 		}
-		console.log('Takeoff line item updated:', updated);
 	};
 
 	const handleSelectRow = (id: string, checked: boolean) => {

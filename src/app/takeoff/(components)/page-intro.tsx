@@ -2,16 +2,12 @@ import { useMemo } from "react"
 import { Card } from "@/components/ui/card"
 import { Table, TableBody } from "@/components/ui/table"
 import { TableCell, TableRow } from "@/components/ui/table"
-import { useMonday } from "@/components/monday-context-provider"
+
+import { formatCurrency } from "@/lib/utils"
 
 function IntroTableRow({ title, total }: { title: string, total: number }) {
-    const formattedTotal = new Intl.NumberFormat(
-        "fr-CA",
-        {
-            style: "currency",
-            currency: "CAD",
-        }
-    ).format(total)
+    const formattedTotal = formatCurrency(total)
+    
     return (
         <TableRow>
             <TableCell className="text-base py-3 px-4">
@@ -55,10 +51,7 @@ function IntroHeader({ project, totals }: { project: any, totals: any }) {
                 <h1 className="text-base text-balance font-medium sm:text-medium flex-col gap-2 flex text-right">
                     <span className="font-normal text-xl mt-2 text-primary">Total de l&apos;estimation</span>
                     <strong className="text-[2rem] font-semibold">
-                        {new Intl.NumberFormat(
-                            "fr-CA",
-                            { style: "currency", currency: "CAD" }
-                        ).format(totals.get("Total"))}
+                        {formatCurrency(totals.get("Total"))}
                     </strong>
                 </h1>
             </div>
@@ -67,14 +60,13 @@ function IntroHeader({ project, totals }: { project: any, totals: any }) {
 }
 
 function Intro({ takeoff, adminFees, lines, categories }: { takeoff: any, adminFees: any, lines: any, categories: any }) {
-    const { settings } = useMonday()
     
     const totals = new Map()
 
     const categoryTotals = useMemo(() => {
         const totals: { [key: string]: number } = {}
         categories.forEach((category: string) => {
-            const total = lines.filter((line: any) => line.category === category).reduce((acc, line) => acc + (line?.cost * line?.qty || 0), 0)
+            const total = lines.filter((line: any) => line.category === category).reduce((acc, line) => acc + (line?.cost_takeoff * line?.qty_takeoff || 0), 0)
             totals[category] = total
         })
         return totals
@@ -98,13 +90,10 @@ function Intro({ takeoff, adminFees, lines, categories }: { takeoff: any, adminF
     }, [adminFees, categoryTotals])
 
     const cautionnementsTotals = useMemo(() => {
-        const { settings } = takeoff || {}
-        const gage = settings?.gage ? settings.gage * subtotal / 100 : 0
-        const garantie = settings?.garantie ? settings.garantie * subtotal / 100 : 0
-        const caution = settings?.caution ? settings.caution * subtotal / 100 : 0
-        const amcq = settings?.amcq ? settings.amcq * subtotal / 100 : 0
-        const caa = settings?.caa ? settings.caa * subtotal / 100 : 0
-        return gage + garantie + caution + amcq + caa
+        // return 0
+        return takeoff?.takeoff_fees?.map((fee: any) => {
+            return fee.value * subtotal / 100 || 0
+        }).reduce((acc: number, total: number) => acc + total, 0)
     }, [takeoff, subtotal])
 
     totals.set("Sous-total", subtotal)
@@ -114,8 +103,6 @@ function Intro({ takeoff, adminFees, lines, categories }: { takeoff: any, adminF
         
     return (
         <IntroWrapper>
-            {/* <pre>{JSON.stringify(settings, null, 2)}</pre>   */}
-            {/* <pre>{JSON.stringify(takeoff, null, 2)}</pre> */}
             <IntroHeader project={takeoff?.project} totals={totals} />
             <IntroBody>
             <IntroTable>

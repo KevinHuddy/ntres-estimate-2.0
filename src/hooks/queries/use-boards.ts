@@ -1,7 +1,7 @@
 "use client"
 
 import { useMonday } from "@/components/monday-context-provider"
-import { mondayGraphQLQueries } from "@/monday/queries"
+import { mondayGraphQLQueries } from "@/utils/monday-queries"
 
 import { CACHE_TIMES, QUERY_KEYS } from "@/utils/constants"
 import { useQuery, UseQueryResult } from "@tanstack/react-query"

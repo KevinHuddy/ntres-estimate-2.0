@@ -6,6 +6,7 @@ import { useMonday } from "@/components/monday-context-provider";
 import { useTakeoffData } from "@/hooks/queries/use-takeoff";
 import TakeoffCautionnements from "./takeoff-cautionnements";
 import SettingsVariables from "./takeoff-variables";
+import CreateVariableButton from "./creata-variable-button";
 
 export default function SettingsButton() {
     const { context } = useMonday()
@@ -39,7 +40,7 @@ export default function SettingsButton() {
 						<SettingsVariables />
 					</div>
 					<div className="px-4 flex">
-						{/* <CreateVariableButton itemId={itemId} /> */}
+						<CreateVariableButton />
 					</div>
 					<Separator />
 				</div>

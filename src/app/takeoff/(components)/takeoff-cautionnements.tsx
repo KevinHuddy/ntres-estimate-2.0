@@ -77,15 +77,10 @@ function TakeoffCautionnementRow({ takeoffFee }: { takeoffFee: any }) {
                             <FormControl>
                                 <Input 
                                     className="h-8 w-24" 
-                                    {...field} 
+                                    {...field}
+                                    value={field.value ?? ""}
                                     onChange={(e) => handleChange(e.target.value)}
                                     onBlur={handleBlur}
-                                    onKeyDown={(e) => {
-                                        // Prevent special characters like -, +, e
-                                        if (['-', '+', 'e', 'E'].includes(e.key)) {
-                                            e.preventDefault()
-                                        }
-                                    }}
                                     type="number"
                                     disabled={isUpdating}
                                 />

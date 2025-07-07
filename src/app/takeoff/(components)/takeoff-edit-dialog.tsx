@@ -136,14 +136,14 @@ export function UserEditDialog({
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="name">Full Name</Label>
-                <Input id="name" value={formData.name} onChange={(e) => handleFieldChange("name", e.target.value)} />
+                <Input id="name" value={formData.name ?? ""} onChange={(e) => handleFieldChange("name", e.target.value)} />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
                 <Input
                   id="email"
                   type="email"
-                  value={formData.email}
+                  value={formData.email ?? ""}
                   onChange={(e) => handleFieldChange("email", e.target.value)}
                 />
               </div>
@@ -165,7 +165,7 @@ export function UserEditDialog({
                   <Input
                     id="joinDate"
                     type="date"
-                    value={formData.joinDate}
+                    value={formData.joinDate ?? ""}
                     onChange={(e) => handleFieldChange("joinDate", e.target.value)}
                   />
                   <CalendarIcon className="absolute right-3 top-3 h-4 w-4 text-muted-foreground" />

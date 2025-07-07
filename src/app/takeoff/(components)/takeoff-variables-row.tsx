@@ -63,7 +63,8 @@ export const VariableForm = memo(function VariableForm({ variable }: { variable:
                     render={({ field }) => (
                         <FormItem className="flex flex-col gap-2 w-full">
                             <FormControl>
-                                <Input {...field} 
+                                <Input {...field}
+                                    value={field.value ?? ""}
                                     onChange={(e) => {
                                         field.onChange(e.target.value)
                                         debounceSubmit()
@@ -85,7 +86,8 @@ export const VariableForm = memo(function VariableForm({ variable }: { variable:
                     render={({ field }) => (
                         <FormItem>
                             <FormControl>
-                                <Input {...field} 
+                                <Input {...field}
+                                    value={field.value ?? ""}
                                     onChange={(e) => {
                                         field.onChange(e.target.value)
                                         debounceSubmit()
@@ -104,7 +106,8 @@ export const VariableForm = memo(function VariableForm({ variable }: { variable:
                     render={({ field }) => (
                         <FormItem className="">
                             <FormControl>
-                                <Input {...field} 
+                                <Input {...field}
+                                    value={field.value ?? ""}
                                     onChange={(e) => {
                                         field.onChange(e.target.value)
                                         debounceSubmit()

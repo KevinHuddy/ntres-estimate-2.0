@@ -1,6 +1,7 @@
 'use client';
 
 import Header from '@/components/header';
+import HeaderActions from './(components)/takeoff-header-actions';
 // import TakeoffHeader from './(components)/takeoff-header';
 // import TakeoffTable from "./(components)/takeoff-table"
 // import TakeoffHeaderActions from './(components)/takeoff-header-actions';
@@ -11,6 +12,8 @@ import { Loading } from '@/components/loading'
 
 import { useTakeoffData, useVariables, useAdminFees } from '@/hooks/queries';
 import { useMappedLineItems } from '@/hooks/compounds/use-mapped-line-items';
+import { useMemo } from 'react';
+import TakeoffCategoryHeader from './(components)/takeoff-category-header';
 
 export default function Takeoff() {
 	const { settings, context } = useMonday();
@@ -19,20 +22,33 @@ export default function Takeoff() {
 	const { data: takeoff, isLoading: takeoffLoading } = useTakeoffData(itemId);
     const { data: variables, isLoading: variablesLoading } = useVariables(itemId);
 	const { data: adminFees, isLoading: adminFeesLoading } = useAdminFees(itemId);  
-    
-    const categories = ['Matériaux', 'Main d\'oeuvre', 'Frais', 'Autre']
-	
-	// const { data: takeoff, isLoading: takeoffLoading } = useTakeoffData(itemId);
-	// const { data: takeoffLines, isLoading: takeoffLinesLoading } = useTakeoffLines(itemId);
-	// const { data: templatesLines, isLoading: templatesLinesLoading } = useTemplatesLines(itemId);
-	// const { data: adminFees, isLoading: adminFeesLoading } = useAdminFees(itemId);
-	// const { data: variables, isLoading: variablesLoading } = useVariables(itemId);
 
+    const categories = useMemo(() => {
+		if (!mappedLineItems) return [];
+		return mappedLineItems.reduce((acc, line) => {
+			if (!acc.includes(line.category)) {
+				acc.push(line.category);
+			}
+			return acc;
+		}, [] as string[]);
+	}, [mappedLineItems]);
+
+    const categoryPages = useMemo(() => {
+        return categories.map((category) => ({
+            label: category,
+            component: <>
+                <TakeoffCategoryHeader category={category} lines={mappedLineItems?.filter((line) => line?.category === category)} takeoff={takeoff} adminData={adminFees} />
+                {/* <TakeoffTable lines={lines?.filter((line) => line?.category === category)} /> */}
+            </>,
+        }));
+    }, [categories, mappedLineItems, takeoff, adminFees]);
+    
 	const pages = [
         {
             label: "Projet",
             component: <Intro takeoff={takeoff} adminFees={adminFees} lines={mappedLineItems} categories={categories} />,
-        }
+        },
+        ...categoryPages,
     ]
 	
 	return (
@@ -44,8 +60,7 @@ export default function Takeoff() {
             (
                 <>
                     <Header>
-                        {/* {!takeoff?.disabled && <HeaderActions takeoffId={itemId} />} */}
-                        {/* <HeaderActions takeoffId={itemId} /> */}
+                        {!takeoff?.disabled && <HeaderActions />}
                     </Header>
                     <Tabs defaultValue={pages[0].label}>
                         <TabsList>

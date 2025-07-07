@@ -4,7 +4,6 @@ fragment ColumnValuesFragment on ColumnValue
     id
     value
     text
-
     ... on ButtonValue {
         label
     }
