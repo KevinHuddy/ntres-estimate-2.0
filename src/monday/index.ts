@@ -1,1 +1,0 @@
-export { getTakeoffData } from "./takeoff"

@@ -1,29 +1,28 @@
 "use client"
 
-import { useContext } from "react";
-import { Loader2 } from "lucide-react";
+import { redirect } from 'next/navigation'
+import { useMonday } from "@/components/monday-context-provider";
+import { Loading } from "@/components/loading";
 
-import { MondayContext } from "@/components/monday-context-provider";
-import { BOARDS } from "@/temp-config";
+export default function RootingPage() {
+	const { context, settings, settingsLoading } = useMonday();
 
-import Takeoff from "./(takeoff)";
-import Quote from "./(quote)";
-import Contract from "./(contract)";
+	if ( settingsLoading ) {
+		<Loading text="Chargement des paramètres..." />
+	}
 
-export default function Home() {
-	const { context } = useContext(MondayContext);
 	const boardId = context?.boardId
 
 	switch (boardId) {
-		case BOARDS.TAKEOFF:
-		  return <Takeoff />
-		case BOARDS.QUOTE:
-			return <Quote />
-		case BOARDS.CONTRACT:
-			return <Contract />
+		case settings?.BOARDS?.TAKEOFF:
+			redirect('/takeoff')
+		case settings?.BOARDS?.QUOTE:
+			redirect('/quote')
+		case settings?.BOARDS?.CONTRACT:
+			redirect('/contract')
 		default:
-			return <div className="flex justify-center p-6">
-				<Loader2 className="w-4 h-4 animate-spin" />
+			return <div className="flex flex-col items-center justify-center h-screen">
+				<div>🚨 L&apos;application doit être configurée</div>
 			</div>
 	}
 }

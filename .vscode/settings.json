@@ -14,6 +14,6 @@
         "package.json": true,
         "postcss.config.mjs": true,
         "tsconfig.json": true,
-        ".next": true,
+        ".next": true
     }
 }

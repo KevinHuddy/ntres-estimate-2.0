@@ -1,9 +1,12 @@
 export const QUERY_KEYS = {
+    SETTINGS: 'settings',
+    COLUMNS_SETTINGS: 'columns-settings',
     BOARDS: 'boards',
     COLUMNS: 'columns',
     TAKEOFF: 'takeoff',
     TEMPLATE_LINE_ITEMS: 'template-line-items',
     LINE_ITEMS: 'line-items',
+    QUOTE_LINE_ITEMS: 'quote-line-items',
 }
 
 export const CACHE_TIMES = {
