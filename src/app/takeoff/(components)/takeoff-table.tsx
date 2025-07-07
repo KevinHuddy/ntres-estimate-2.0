@@ -4,14 +4,12 @@ import type { ColumnDef } from '@tanstack/react-table';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
-import { DataTable } from '@/components/table/table';
 import { UserEditDialog } from './takeoff-edit-dialog';
 
 
 import { Edit as EditIcon, Delete as DeleteIcon } from '@vibe/icons'
-import useMappedLineItems from '@/hooks/compounds/use-mapped-line-items';
-import { useMonday } from '@/components/monday-context-provider';
 import { Loading } from '@/components/loading';
+import { LineItemsTable } from './line-items-table';
 
 // Create a small list of mock users directly
 const takeoffLineItems = [
@@ -46,10 +44,7 @@ const units = ['m2', 'm', 'h', 'j']
 
 
 
-export default function TakeoffTable() {
-	const { context } = useMonday();
-	const { data: mappedLineItems, isLoading: mappedLineItemsLoading } = useMappedLineItems(context?.itemId);
-
+export default function TakeoffTable({ lines, isLoading }: { lines: any[], isLoading: boolean }) {
 	const [selectedRows, setSelectedRows] = useState({});
 	const [editing, setEditing] = useState(null);
 	const [dialogOpen, setDialogOpen] = useState(false);
@@ -204,7 +199,7 @@ export default function TakeoffTable() {
 		}
 	};
 
-	if ( mappedLineItemsLoading ) {
+	if ( isLoading ) {
 		return (
 			<Loading text="Chargement des lignes de devis..." />
 		);
@@ -212,8 +207,8 @@ export default function TakeoffTable() {
 
 	return (
 		<>
-			<DataTable
-				data={mappedLineItems}
+			<LineItemsTable
+				data={lines}
 				columns={columns}
 				isLoading={false}
 				selectedRows={selectedRows}

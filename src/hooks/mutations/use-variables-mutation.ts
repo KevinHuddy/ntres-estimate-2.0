@@ -23,11 +23,20 @@ export const useCreateVariable = () => {
             value: number,
             unit?: string
         }) => {
+            console.log({
+                name,
+                boardId: variables.boardId,
+                columnValues: {
+                    [variables.cols.LINKED_TAKEOFF]: takeoffId || "",
+                    [variables.cols.VALUE]: value || 0,
+                    [variables.cols.UNIT_TYPE]: unit || null
+                }
+            })
             const response = await client.items.create({
                 itemName: name,
                 boardId: variables.boardId,
                 columnValues: {
-                    [variables.cols.LINKED_TAKEOFF]: takeoffId,
+                    [variables.cols.LINKED_TAKEOFF]: takeoffId.toString(),
                     [variables.cols.VALUE]: value,
                     [variables.cols.UNIT_TYPE]: unit || null
                 }

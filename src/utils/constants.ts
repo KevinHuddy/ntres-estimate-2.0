@@ -9,6 +9,7 @@ export const QUERY_KEYS = {
     QUOTE_LINE_ITEMS: 'quote-line-items',
     VARIABLES: 'variables',
     ADMIN_FEES: 'admin-fees',
+    SUPPLIERS: 'suppliers',
 }
 
 export const CACHE_TIMES = {

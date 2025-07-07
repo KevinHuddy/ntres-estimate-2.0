@@ -35,6 +35,7 @@ export const useUpdateAdminFees = () => {
                     [cols.OTHER]: columns.other || 0,
                 }
             })
+            console.log(takeoffId)
         },
         onError: (error) => {   
             console.error('Error updating admin:', error)

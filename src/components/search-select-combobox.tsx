@@ -139,6 +139,7 @@ export const SearchSelectCombobox = React.memo(
 									height={Math.min(240, filteredOptions.length * 35)}
 									itemCount={filteredOptions.length}
 									itemSize={35}
+									width="300px"
 									itemData={{
 										filteredOptions,
 										onSelect: handleSelect,

@@ -36,9 +36,9 @@ export function getBoardSettings(settings: any, boardName: string) {
 
   return {
     boardId: board || "",
-    cols: Object.keys(columns).reduce((acc: any, key: string) => {
+    cols: columns ? Object.keys(columns).reduce((acc: any, key: string) => {
       acc[key] = columns[key]
       return acc
-    }, {}) || {}
+    }, {}) : {}
   }
 }

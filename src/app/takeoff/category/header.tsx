@@ -15,7 +15,7 @@ export default function TakeoffCategoryHeader({category, lines, takeoff}: {categ
 
     const { data: adminData } = useAdminFees(itemId)
 
-    const adminFees = useMemo(() => {   
+    const adminFees = useMemo(() => {
         return adminData?.find((admin: any) => admin.name === category) || {}
     }, [adminData, category])
 

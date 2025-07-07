@@ -2,23 +2,15 @@ import { Button } from "@/components/ui/button"
 import { Drawer, DrawerContent, DrawerDescription, DrawerFooter, DrawerHeader, DrawerTitle, DrawerTrigger, DrawerClose } from "@/components/ui/drawer"
 import { Separator } from "@/components/ui/separator"
 import { Settings2 } from "lucide-react"
-import { useMonday } from "@/components/monday-context-provider";
-import { useTakeoffData } from "@/hooks/queries/use-takeoff";
 import TakeoffCautionnements from "./takeoff-cautionnements";
 import SettingsVariables from "./takeoff-variables";
 import CreateVariableButton from "./creata-variable-button";
 
 export default function SettingsButton() {
-    const { context } = useMonday()
-	const { data: takeoff, isLoading: takeoffLoading } = useTakeoffData(context?.itemId)
-	// const { data: variables, isLoading: variablesLoading } = useGetVariables(itemId)
-	
-	// const { settings } = takeoff || {}
-
-    return (
+	return (
 		<Drawer direction={"right"}>
 			<DrawerTrigger asChild>
-				<Button variant="default" size="sm" disabled={takeoffLoading}>
+				<Button variant="default" size="sm">
 					<Settings2 size={16} />
 					<span className="sr-only">Configuration</span>
 				</Button>
