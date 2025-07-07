@@ -11,7 +11,7 @@ import {
   } from "@/components/ui/dialog"
 import { useState } from "react"
 import { Loader2, Plus } from "lucide-react"
-import { useMonday } from "@/components/monday-context-provider"
+// import { useMonday } from "@/components/monday-context-provider"
 
 // import { useCreateQuote } from "@/mutations/quotes-mutation"
 // import { useGetProject } from "@/queries/project-queries"
@@ -19,10 +19,10 @@ import { useMonday } from "@/components/monday-context-provider"
 
 
 export default function CreateQuoteButton() {
-    const { context } = useMonday();
-    const takeoffId = context?.itemId;
+    // const { context } = useMonday();
+    // const takeoffId = context?.itemId;
     const [open, setOpen] = useState(false)
-    const [quoteId, setQuoteId] = useState<string | null>(null)
+    // const [quoteId, setQuoteId] = useState<string | null>(null)
     // const { data: takeoff } = useGetTakeoff(takeoffId)
     // const { data: project } = useGetProject(takeoff?.project?.id)
     
@@ -76,7 +76,7 @@ export default function CreateQuoteButton() {
                 <div className="flex flex-col gap-4">
                     <div className="flex flex-col gap-2 w-full">
                         {quotes?.length > 0 ? (
-                        <Select onValueChange={(value: string) => setQuoteId(value)}>
+                        <Select>
                             <SelectTrigger className="w-full">
                                 <SelectValue placeholder="Choisir la soumission" />
                             </SelectTrigger>
