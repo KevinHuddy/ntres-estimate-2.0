@@ -7,6 +7,8 @@ export const QUERY_KEYS = {
     TEMPLATE_LINE_ITEMS: 'template-line-items',
     LINE_ITEMS: 'line-items',
     QUOTE_LINE_ITEMS: 'quote-line-items',
+    VARIABLES: 'variables',
+    ADMIN_FEES: 'admin-fees',
 }
 
 export const CACHE_TIMES = {

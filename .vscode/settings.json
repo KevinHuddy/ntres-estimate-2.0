@@ -1,19 +1,19 @@
 {
     "files.exclude": {
-        "node_modules": true,
-        "public": true,
-        ".vscode": true,
-        "favicon.ico": true,
-        ".gitignore": true,
-        "bun.lockb": true,
-        "components.json": true,
-        "eslint.config.mjs": true,
-        "next-env.d.ts": true,
-        "next.config.ts": true,
-        "package-lock.json": true,
-        "package.json": true,
-        "postcss.config.mjs": true,
-        "tsconfig.json": true,
-        ".next": true
+        "node_modules": false,
+        "public": false,
+        ".vscode": false,
+        "favicon.ico": false,
+        ".gitignore": false,
+        "bun.lockb": false,
+        "components.json": false,
+        "eslint.config.mjs": false,
+        "next-env.d.ts": false,
+        "next.config.ts": false,
+        "package-lock.json": false,
+        "package.json": false,
+        "postcss.config.mjs": false,
+        "tsconfig.json": false,
+        ".next": false
     }
 }

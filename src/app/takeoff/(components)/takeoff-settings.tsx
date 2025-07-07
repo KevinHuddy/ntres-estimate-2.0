@@ -5,12 +5,7 @@ import { Settings2 } from "lucide-react"
 import { useMonday } from "@/components/monday-context-provider";
 import { useTakeoffData } from "@/hooks/queries/use-takeoff";
 import TakeoffCautionnements from "./takeoff-cautionnements";
-// import SettingsCautionnements from "./settings-cautionnement";
-// import { useGetTakeoff } from "@/queries/takeoff-queries";
-// import SettingsVariables from "./settings-variables";
-// import { useGetVariables } from "@/queries/variables-queries";
-
-// import CreateVariableButton from "./variable-create-button"
+import SettingsVariables from "./takeoff-variables";
 
 export default function SettingsButton() {
     const { context } = useMonday()
@@ -41,7 +36,7 @@ export default function SettingsButton() {
 					<Separator />
 					<div className="flex flex-col gap-2 overflow-y-auto px-4 text-sm">
 						<h2 className="text-sm font-semibold">Variables de calculs</h2>
-						{/* <SettingsVariables variables={variables} itemId={itemId} /> */}
+						<SettingsVariables />
 					</div>
 					<div className="px-4 flex">
 						{/* <CreateVariableButton itemId={itemId} /> */}

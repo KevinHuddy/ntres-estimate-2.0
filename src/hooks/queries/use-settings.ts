@@ -24,10 +24,14 @@ const query = `
         $lineItemsBoardId: [ID!]
         $takeoffBoardId: [ID!]
         $templateLineItemsBoardId: [ID!]
+        $variablesBoardId: [ID!]
+        $adminFeesBoardId: [ID!]
     ) {
         takeoff: boards(ids: $takeoffBoardId) { ...ColumnsFragment }
         lineItems: boards(ids: $lineItemsBoardId) { ...ColumnsFragment }
         templateLineItems: boards(ids: $templateLineItemsBoardId) { ...ColumnsFragment }
+        variables: boards(ids: $variablesBoardId) { ...ColumnsFragment }
+        adminFees: boards(ids: $adminFeesBoardId) { ...ColumnsFragment }
     }`
 
 
@@ -42,13 +46,15 @@ function getColIds(columns: any, tag: string) {
 const COLUMNS = ({ 
     takeoffCols,
     templateLineItemsCols,
-    lineItemsCols
+    lineItemsCols,
+    variablesCols,
+    adminFeesCols
 }: {
     takeoffCols: any,
     templateLineItemsCols: any,
     lineItemsCols: any,
-    // adminFeesCols: any,
-    // variablesCols: any
+    variablesCols: any,
+    adminFeesCols: any,
 }) => {
     return {
         TAKEOFF: {
@@ -98,9 +104,19 @@ const COLUMNS = ({
             MO_HOURS: getColId(lineItemsCols, "{{{mo_hours}}}"),
             MO_QTY: getColId(lineItemsCols, "{{{mo_qty}}}"),
             MO_DAYS: getColId(lineItemsCols, "{{{mo_days}}}"),
+        },
+        VARIABLES: {
+            VALUE: getColId(variablesCols, "{{{value}}}"),
+            UNIT_TYPE: getColId(variablesCols, "{{{unit_type}}}"),
+            LINKED_TAKEOFF: getColId(variablesCols, "{{{linked_takeoff}}}"),
+        },
+        ADMIN_FEES: {
+            LINKED_TAKEOFF: getColId(adminFeesCols, "{{{linked_takeoff}}}"),
+            ADMIN: getColId(adminFeesCols, "{{{admin}}}"),
+            MARGIN: getColId(adminFeesCols, "{{{margin}}}"),
+            UNFORESEEN: getColId(adminFeesCols, "{{{unforeseen}}}"),
+            OTHER: getColId(adminFeesCols, "{{{other}}}"),
         }
-        // ADMIN_FEES: {},
-        // VARIABLES: {}
     }
 }
 
@@ -118,14 +134,18 @@ export const useGetSettings = (options: any = {}): UseQueryResult<any> => {
                     query, { variables: {
                         lineItemsBoardId: mainSettings?.BOARDS?.LINE_ITEMS,
                         templateLineItemsBoardId: mainSettings?.BOARDS?.TEMPLATE_LINE_ITEMS,
-                        takeoffBoardId: mainSettings?.BOARDS?.TAKEOFF
+                        takeoffBoardId: mainSettings?.BOARDS?.TAKEOFF,
+                        variablesBoardId: mainSettings?.BOARDS?.VARIABLES,
+                        adminFeesBoardId: mainSettings?.BOARDS?.ADMIN_FEES
                     }
                 })
 
                 const columns = COLUMNS({
                     takeoffCols: columnSettings?.data?.takeoff?.[0]?.columns,
                     templateLineItemsCols: columnSettings?.data?.templateLineItems?.[0]?.columns,
-                    lineItemsCols: columnSettings?.data?.lineItems?.[0]?.columns
+                    lineItemsCols: columnSettings?.data?.lineItems?.[0]?.columns,
+                    variablesCols: columnSettings?.data?.variables?.[0]?.columns,
+                    adminFeesCols: columnSettings?.data?.adminFees?.[0]?.columns
                 })
 
                 return {
