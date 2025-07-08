@@ -4,6 +4,7 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Button } from "@/components/ui/button"
 import { Edit, Delete, Duplicate, Close } from '@vibe/icons'
 import SupplierName from "../supplier-name"
+import { formatCurrency } from "@/lib/utils"
 
 interface ColumnsConfig {
     selectedRows: Record<string, boolean>;
@@ -24,6 +25,8 @@ export const createColumns = ({
 }: ColumnsConfig): ColumnDef<any>[] => [
     {
         id: 'select',
+        size: 20,
+        enableResizing: false,
         cell: ({ row }) => (
             <div onClick={(e) => e.stopPropagation()}>
                 { !!row.original.id ? (
@@ -38,43 +41,105 @@ export const createColumns = ({
                     <Close className="h-4 w-4 text-muted-foreground/40" />
                 )}
             </div>
-        ),
-        enableSorting: false,
-        enableHiding: false,
+        )
     },
     {
         accessorKey: 'name',
         header: 'Nom',
-        cell: ({ row }) => row.original.name
+        size: 300,
+        minSize: 200,
+        maxSize: 500,
+        cell: ({ row }) => (
+            <div className="truncate pr-2" title={row.original.name}>
+                {row.original.name}
+            </div>
+        )
     },
     {
         accessorKey: 'type',
         header: 'Type',
-        cell: ({ row }) => row.original.type
+        size: 120,
+        cell: ({ row }) => (
+            <div className="truncate pr-2" title={row.original.type}>
+                {row.original.type}
+            </div>
+        )
     },
     {
         accessorKey: 'unit_type',
         header: 'Unité',
-        cell: ({ row }) => row.original.unit_type
+        size: 100,
+        minSize: 80,
+        maxSize: 150,
+        cell: ({ row }) => (
+            <div className="truncate pr-2" title={row.original.unit_type}>
+                {row.original.unit_type}
+            </div>
+        )
     },
     {
         accessorKey: 'qty_takeoff',
-        header: 'Quantité',
-        cell: ({ row }) => row.original.qty_takeoff
+        // header: 'Quantité',
+        size: 60,
+        header: () => (
+            <div className="text-right w-full border-l-1">
+                Quantité
+            </div>
+        ),
+        cell: ({ row }) => (
+            <div className="text-right" title={row.original.qty_takeoff}>
+                {row.original.qty_takeoff}
+            </div>
+        )
     },
     {
-        accessorKey: 'price_takeoff',
-        header: 'Prix unitaire',
-        cell: ({ row }) => row.original.price_takeoff
+        accessorKey: 'cost_takeoff',
+        size: 80,
+        header: () => (
+            <div className="text-right w-full border-l-1">
+                Prix
+            </div>
+        ),
+        cell: ({ row }) => (
+            <div className="text-right" title={row.original.cost_takeoff}>
+                {formatCurrency(row.original.cost_takeoff)}
+            </div>
+        )
+    },
+    {
+        accessorKey: 'total',
+        size: 100,
+        header: () => (
+            <div className="text-right w-full border-l-1">
+                Total
+            </div>
+        ),
+        cell: ({ row }) => (
+            <div className="text-right">
+                {formatCurrency(row.original.cost_takeoff * row.original.qty_takeoff)}
+            </div>
+        )
     },
     {
         accessorKey: 'linked_supplier',
         header: 'Fournisseur',
-        cell: ({ row }) => <SupplierName supplierId={row.original.linked_supplier} />
+        size: 200,
+        minSize: 150,
+        maxSize: 300,
+        cell: ({ row }) => (
+            <div className="truncate pr-2">
+                <SupplierName supplierId={row.original.linked_supplier} />
+            </div>
+        )
     },
     {
         id: 'actions',
-        header: 'Actions',
+        header: () => (
+            <div className="w-full">
+                Actions
+            </div>
+        ),
+        size: 100,
         cell: ({ row }) => (
             <div
                 className="flex gap-2"

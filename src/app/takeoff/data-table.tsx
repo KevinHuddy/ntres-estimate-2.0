@@ -1,11 +1,14 @@
 "use client";
 
 import { ColumnDef, Row, SortDirection, SortingState, flexRender, getCoreRowModel, getSortedRowModel, useReactTable } from "@tanstack/react-table";
+
 import { TableCell, TableHead, TableRow } from "@/components/ui/table";
 import { HTMLAttributes, forwardRef, useState } from "react";
 import { TableVirtuoso } from "react-virtuoso";
 import { cn } from "@/lib/utils";
 
+// Original Table is wrapped with a <div> (see https://ui.shadcn.com/docs/components/table#radix-:r24:-content-manual), 
+// but here we don't want it, so let's use a new component with only <table> tag
 const TableComponent = forwardRef<
   HTMLTableElement,
   React.HTMLAttributes<HTMLTableElement>
@@ -32,9 +35,13 @@ const TableRowComponent = <TData,>(rows: Row<TData>[]) =>
         {...props}
       >
         {row.getVisibleCells().map((cell) => (
-          <TableCell key={cell.id}>
+          <TableCell key={cell.id} style={{
+            minWidth: cell.column.columnDef.size,
+            maxWidth: cell.column.columnDef.size,
+          }}>
             {flexRender(cell.column.columnDef.cell, cell.getContext())}
           </TableCell>
+
         ))}
       </TableRow>
     );
@@ -64,7 +71,6 @@ export function DataTable<TData, TValue>({
   columns,
   data,
   height,
-  filterConfig,
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = useState<SortingState>([]);
   const table = useReactTable({
@@ -98,8 +104,12 @@ export function DataTable<TData, TValue>({
                   <TableHead
                     key={header.id}
                     colSpan={header.colSpan}
+                    // style={{
+                    //   width: header.getSize(),
+                    // }}
                     style={{
-                      width: header.getSize(),
+                      minWidth: header.column.columnDef.size,
+                      maxWidth: header.column.columnDef.size,
                     }}
                   >
                     {header.isPlaceholder ? null : (

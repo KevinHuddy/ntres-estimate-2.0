@@ -44,7 +44,7 @@ export function TypeFilter({
   value, 
   onChange, 
   data, 
-  placeholder = "All types", 
+  placeholder = "Tout les types", 
   className 
 }: TypeFilterProps) {
   const uniqueTypes = useMemo(() => {
@@ -59,7 +59,7 @@ export function TypeFilter({
           <SelectValue placeholder={placeholder} />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="all">All types</SelectItem>
+          <SelectItem value="all">Tous les types</SelectItem>
           {uniqueTypes.map((type) => (
             <SelectItem key={type} value={type}>
               {type}

@@ -58,7 +58,7 @@ export default function Category({
 			<DataTable
 				data={filteredData}
 				columns={columns}
-				height="400px"
+				height="500px"
 			/>
 		</div>
 	);
