@@ -1,51 +1,9 @@
 "use client";
 
-import { ColumnDef, Row, SortDirection, SortingState, flexRender, getCoreRowModel, getSortedRowModel, useReactTable } from "@tanstack/react-table";
+import { ColumnDef, SortDirection, SortingState, flexRender, getCoreRowModel, getSortedRowModel, useReactTable } from "@tanstack/react-table";
 
-import { TableCell, TableHead, TableRow } from "@/components/ui/table";
-import { HTMLAttributes, forwardRef, useState } from "react";
-import { TableVirtuoso } from "react-virtuoso";
-import { cn } from "@/lib/utils";
-
-// Original Table is wrapped with a <div> (see https://ui.shadcn.com/docs/components/table#radix-:r24:-content-manual), 
-// but here we don't want it, so let's use a new component with only <table> tag
-const TableComponent = forwardRef<
-  HTMLTableElement,
-  React.HTMLAttributes<HTMLTableElement>
->(({ className, ...props }, ref) => (
-  <table
-    ref={ref}
-    className={cn("w-full caption-bottom text-sm", className)}
-    {...props}
-  />
-));
-TableComponent.displayName = "TableComponent";
-
-const TableRowComponent = <TData,>(rows: Row<TData>[]) =>
-  function getTableRow(props: HTMLAttributes<HTMLTableRowElement>) {
-    const index = props["data-index"];
-    const row = rows[index];
-
-    if (!row) return null;
-
-    return (
-      <TableRow
-        key={row.id}
-        data-state={row.getIsSelected() && "selected"}
-        {...props}
-      >
-        {row.getVisibleCells().map((cell) => (
-          <TableCell key={cell.id} style={{
-            minWidth: cell.column.columnDef.size,
-            maxWidth: cell.column.columnDef.size,
-          }}>
-            {flexRender(cell.column.columnDef.cell, cell.getContext())}
-          </TableCell>
-
-        ))}
-      </TableRow>
-    );
-  };
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { useState } from "react";
 
 function SortingIndicator({ isSorted }: { isSorted: SortDirection | false }) {
   if (!isSorted) return null;
@@ -65,12 +23,14 @@ interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
   height: string;
+  onRowClick?: (row: TData) => void;
 }
 
 export function DataTable<TData, TValue>({
   columns,
   data,
   height,
+  onRowClick,
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = useState<SortingState>([]);
   const table = useReactTable({
@@ -86,27 +46,26 @@ export function DataTable<TData, TValue>({
 
   const { rows } = table.getRowModel();
 
+  const handleRowClick = (row: TData, e: React.MouseEvent) => {
+    // Prevent clicks on buttons/inputs from triggering row click
+    const target = e.target as HTMLElement;
+    if (target.closest('button') || target.closest('input') || target.closest('[role="button"]')) {
+      return;
+    }
+    onRowClick?.(row);
+  };
+
   return (
     <div className="rounded-md border">
-      <TableVirtuoso
-        style={{ height }}
-        totalCount={rows.length}
-        components={{
-          Table: TableComponent,
-          TableRow: TableRowComponent(rows),
-        }}
-        fixedHeaderContent={() =>
-          table.getHeaderGroups().map((headerGroup) => (
-            // Change header background color to non-transparent
-            <TableRow className="bg-secondary" key={headerGroup.id}>
+      <Table>
+        <TableHeader>
+          {table.getHeaderGroups().map((headerGroup) => (
+            <TableRow key={headerGroup.id}>
               {headerGroup.headers.map((header) => {
                 return (
                   <TableHead
                     key={header.id}
                     colSpan={header.colSpan}
-                    // style={{
-                    //   width: header.getSize(),
-                    // }}
                     style={{
                       minWidth: header.column.columnDef.size,
                       maxWidth: header.column.columnDef.size,
@@ -138,9 +97,31 @@ export function DataTable<TData, TValue>({
                 );
               })}
             </TableRow>
-          ))
-        }
-      />
+          ))}
+        </TableHeader>
+        <TableBody>
+          {rows.map((row) => (
+            <TableRow
+              key={row.id}
+              data-state={row.getIsSelected() && "selected"}
+              className={onRowClick ? "cursor-pointer hover:bg-muted/50 transition-colors" : ""}
+              onClick={onRowClick ? (e) => handleRowClick(row.original, e) : undefined}
+            >
+              {row.getVisibleCells().map((cell) => (
+                <TableCell 
+                  key={cell.id} 
+                  style={{
+                    minWidth: cell.column.columnDef.size,
+                    maxWidth: cell.column.columnDef.size,
+                  }}
+                >
+                  {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                </TableCell>
+              ))}
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
     </div>
   );
 }

@@ -14,7 +14,7 @@ import { Loading } from '@/components/loading';
 
 import { useTakeoffData, useAdminFees } from '@/hooks/queries';
 import { useMappedLineItems } from '@/hooks/compounds/use-mapped-line-items';
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useCallback } from 'react';
 
 import Category from './category';
 
@@ -37,21 +37,21 @@ export default function Takeoff() {
 		Record<string, boolean>
 	>({});
 
-	const handleSelectRow = (id: string, checked: boolean) => {
+	const handleSelectRow = useCallback((id: string, checked: boolean) => {
 		const newSelectedRows = { ...selectedRows, [id]: checked };
 		setSelectedRows(newSelectedRows);
 		console.log(newSelectedRows);
-	};
+	}, [selectedRows]);
 
-	const handleEdit = (row: any) => {
+	const handleEdit = useCallback((row: any) => {
 		console.log('Edit row:', row);
 		// Add your edit logic here
-	};
+	}, []);
 
-	const handleDelete = (id: string) => {
+	const handleDelete = useCallback((id: string) => {
 		console.log('Delete row:', id);
 		// Add your delete logic here
-	};
+	}, []);
 
 	// Create columns with selection functionality
 	const columns = useMemo(
@@ -62,7 +62,7 @@ export default function Takeoff() {
 				onEdit: handleEdit,
 				onDelete: handleDelete,
 			}),
-		[selectedRows]
+		[selectedRows, handleSelectRow, handleEdit, handleDelete]
 	);
 
 	const categories = useMemo(() => {
@@ -127,7 +127,7 @@ export default function Takeoff() {
 				<Loading text="chargement des frais administratifs" />
 			) : (
 				<>
-					<Tabs defaultValue={pages[0].label}>
+					<Tabs defaultValue={pages[0].label} className="h-full">
 						<TabsList>
 							{pages.map((page) => (
 								<TabsTrigger

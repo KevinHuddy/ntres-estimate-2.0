@@ -5,6 +5,13 @@ import { Button } from "@/components/ui/button"
 import { Edit, Delete, Duplicate, Close } from '@vibe/icons'
 import SupplierName from "../supplier-name"
 import { formatCurrency } from "@/lib/utils"
+import { memo } from "react"
+
+// Memoized icon components to reduce SVG rendering overhead
+const MemoizedEdit = memo(Edit);
+const MemoizedDelete = memo(Delete);
+const MemoizedDuplicate = memo(Duplicate);
+const MemoizedClose = memo(Close);
 
 interface ColumnsConfig {
     selectedRows: Record<string, boolean>;
@@ -38,7 +45,7 @@ export const createColumns = ({
                         aria-label="Select row"
                         />
                 ) : (
-                    <Close className="h-4 w-4 text-muted-foreground/40" />
+                    <MemoizedClose className="h-4 w-4 text-muted-foreground/40" />
                 )}
             </div>
         )
@@ -128,7 +135,7 @@ export const createColumns = ({
         maxSize: 300,
         cell: ({ row }) => (
             <div className="truncate pr-2">
-                <SupplierName supplierId={row.original.linked_supplier} />
+                <SupplierName supplierName={row.original.supplierName} />
             </div>
         )
     },
@@ -156,7 +163,7 @@ export const createColumns = ({
                         }
                     }}
                 >
-                    <Edit className="h-4 w-4" />
+                    <MemoizedEdit className="h-4 w-4" />
                 </Button>
                 <Button
                     size="sm"
@@ -169,7 +176,7 @@ export const createColumns = ({
                         }
                     }}
                 >
-                    <Duplicate className="h-4 w-4" />
+                    <MemoizedDuplicate className="h-4 w-4" />
                 </Button>
                 <Button
                     size="sm"
@@ -182,7 +189,7 @@ export const createColumns = ({
                         }
                     }}
                 >
-                    <Delete className="h-4 w-4" />
+                    <MemoizedDelete className="h-4 w-4" />
                 </Button>
             </div>
         ),

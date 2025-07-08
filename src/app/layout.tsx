@@ -31,7 +31,7 @@ export default async function RootLayout({
 	return (
 		<html lang="en" suppressHydrationWarning>
 			<body
-				className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+				className={`${geistSans.variable} ${geistMono.variable} antialiased h-screen`}
 			>
 				<ThemeProvider
 					attribute="class"
@@ -41,7 +41,7 @@ export default async function RootLayout({
 				>
 					<QueryProvider>
 						<MondayContextProvider>
-							<div className="py-4 px-6 flex flex-col gap-4">
+							<div className="py-4 px-6 flex flex-col gap-4 h-full">
 								{children}
 							</div>
 							<Toaster />

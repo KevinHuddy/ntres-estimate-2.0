@@ -1,6 +1,8 @@
 import SettingsButton from "./takeoff-settings";
 import CreateQuoteButton from "./create-quote-button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
+import { DollarSign } from "lucide-react";
 
 export default function TakeoffHeaderActions({
     isLoading,
@@ -18,10 +20,10 @@ export default function TakeoffHeaderActions({
                 ) : (
                     <>
                         <CreateQuoteButton/>
-                        {/* <Button variant="secondary" size="sm">
+                        <Button variant="secondary" size="sm">
                             <DollarSign size={16} />
                             Demande de prix
-                        </Button> */}
+                        </Button>
                         <SettingsButton />
                     </>
                 )
