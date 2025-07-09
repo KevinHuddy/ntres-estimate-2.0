@@ -2,7 +2,7 @@ import { DataTable } from "../data-table";
 import TakeoffCategoryHeader from "./header";
 import { SearchFilter, TypeFilter, useDataFilters } from "./filters";
 import { useSuppliers } from "@/hooks/queries/use-suppliers";
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import EditModal from "./edit-modal";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
@@ -12,18 +12,22 @@ interface CategoryProps {
 	lines: any[];
 	takeoff: any;
 	columns: any;
+	editModalOpen?: boolean;
+	setEditModalOpen?: (open: boolean) => void;
+	selectedItem?: any;
+	setSelectedItem?: (item: any) => void;
 }
 
 export default function Category({ 
 	category, 
 	lines, 
 	takeoff,
-	columns
+	columns,
+	editModalOpen = false,
+	setEditModalOpen,
+	selectedItem,
+	setSelectedItem,
 }: CategoryProps) {
-	// Modal state
-	const [editModalOpen, setEditModalOpen] = useState(false);
-	const [selectedItem, setSelectedItem] = useState<any>(null);
-
 	// Fetch suppliers once at category level
 	const { data: suppliers } = useSuppliers();
 	
@@ -53,8 +57,10 @@ export default function Category({
 
 	// Handle row click to open edit modal
 	const handleRowClick = (row: any) => {
-		setSelectedItem(row);
-		setEditModalOpen(true);
+		if (setSelectedItem && setEditModalOpen) {
+			setSelectedItem(row);
+			setEditModalOpen(true);
+		}
 	};
 
 	return (
@@ -93,13 +99,12 @@ export default function Category({
 			<DataTable
 				data={filteredData}
 				columns={columns}
-				height="600px"
 				onRowClick={handleRowClick}
 			/>
 
 			<EditModal
 				open={editModalOpen}
-				onOpenChange={setEditModalOpen}
+				onOpenChange={setEditModalOpen || (() => {})}
 				item={selectedItem}
 			/>
 		</div>

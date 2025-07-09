@@ -6,6 +6,16 @@ import { Edit, Delete, Duplicate, Close } from '@vibe/icons'
 import SupplierName from "../supplier-name"
 import { formatCurrency } from "@/lib/utils"
 import { memo } from "react"
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 
 // Memoized icon components to reduce SVG rendering overhead
 const MemoizedEdit = memo(Edit);
@@ -18,17 +28,52 @@ interface ColumnsConfig {
     handleSelectRow: (id: string, checked: boolean) => void;
     onEdit?: (row: any) => void;
     onDelete?: (id: string) => void;
-    // onDuplicate?: (row: any) => void;
-    // type?: 'product' | 'mo'
+    onDuplicate?: (row: any) => void;
+    deleteDialogOpen?: boolean;
+    setDeleteDialogOpen?: (open: boolean) => void;
+    deleteItem?: any;
+    setDeleteItem?: (item: any) => void;
+}
+
+// Delete confirmation dialog component
+function DeleteConfirmDialog({ 
+    open, 
+    onOpenChange, 
+    onConfirm, 
+    itemName 
+}: { 
+    open: boolean;
+    onOpenChange: (open: boolean) => void;
+    onConfirm: () => void;
+    itemName: string;
+}) {
+    return (
+        <AlertDialog open={open} onOpenChange={onOpenChange}>
+            <AlertDialogContent>
+                <AlertDialogHeader>
+                    <AlertDialogTitle>Confirmer la suppression</AlertDialogTitle>
+                    <AlertDialogDescription>
+                        Êtes-vous sûr de vouloir supprimer l&apos;élément &quot;{itemName}&quot; ? Cette action est irréversible.
+                    </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                    <AlertDialogCancel>Annuler</AlertDialogCancel>
+                    <AlertDialogAction onClick={onConfirm} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                        Supprimer
+                    </AlertDialogAction>
+                </AlertDialogFooter>
+            </AlertDialogContent>
+        </AlertDialog>
+    );
 }
 
 export const createColumns = ({ 
     selectedRows,
     handleSelectRow, 
     onEdit,
-    onDelete,
-    // onDuplicate,
-    // type = 'product'
+    onDuplicate,
+    setDeleteDialogOpen,
+    setDeleteItem,
 }: ColumnsConfig): ColumnDef<any>[] => [
     {
         id: 'select',
@@ -147,51 +192,70 @@ export const createColumns = ({
             </div>
         ),
         size: 100,
-        cell: ({ row }) => (
-            <div
-                className="flex gap-2"
-                onClick={(e) => e.stopPropagation()}
-            >
-                <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => {
-                        if (onEdit) {
-                            onEdit(row.original);
-                        } else {
-                            console.log('View user details:', row.original);
-                        }
-                    }}
+        cell: ({ row }) => {
+            const handleEdit = () => {
+                if (onEdit) {
+                    onEdit(row.original);
+                } else {
+                    console.log('Edit:', row.original);
+                }
+            };
+
+            const handleDuplicate = () => {
+                if (onDuplicate) {
+                    // Create a copy of the row data with a new temporary ID
+                    const duplicatedRow = {
+                        ...row.original,
+                        id: `temp_${Date.now()}`, // Temporary ID for the duplicated row
+                        name: `${row.original.name} (Copie)`,
+                    };
+                    onDuplicate(duplicatedRow);
+                } else {
+                    console.log('Duplicate:', row.original);
+                }
+            };
+
+            const handleDeleteClick = () => {
+                if (setDeleteItem && setDeleteDialogOpen) {
+                    setDeleteItem(row.original);
+                    setDeleteDialogOpen(true);
+                }
+            };
+
+            return (
+                <div
+                    className="flex gap-2"
+                    onClick={(e) => e.stopPropagation()}
                 >
-                    <MemoizedEdit className="h-4 w-4" />
-                </Button>
-                <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => {
-                        if (onEdit) {
-                            onEdit(row.original);
-                        } else {
-                            console.log('View user details:', row.original);
-                        }
-                    }}
-                >
-                    <MemoizedDuplicate className="h-4 w-4" />
-                </Button>
-                <Button
-                    size="sm"
-                    variant="destructive"
-                    onClick={() => {
-                        if (onDelete) {
-                            onDelete(row.original.id);
-                        } else {
-                            console.log('Delete user:', row.original.id);
-                        }
-                    }}
-                >
-                    <MemoizedDelete className="h-4 w-4" />
-                </Button>
-            </div>
-        ),
+                    <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={handleEdit}
+                        title="Modifier"
+                    >
+                        <MemoizedEdit className="h-4 w-4" />
+                    </Button>
+                    <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={handleDuplicate}
+                        title="Dupliquer"
+                    >
+                        <MemoizedDuplicate className="h-4 w-4" />
+                    </Button>
+                    <Button
+                        size="sm"
+                        variant="destructive"
+                        onClick={handleDeleteClick}
+                        title="Supprimer"
+                    >
+                        <MemoizedDelete className="h-4 w-4" />
+                    </Button>
+                </div>
+            );
+        },
     },
 ];
+
+// Export the DeleteConfirmDialog for use in the parent component
+export { DeleteConfirmDialog };

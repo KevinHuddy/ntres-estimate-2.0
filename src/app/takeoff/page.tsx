@@ -18,7 +18,7 @@ import { useMemo, useState, useCallback } from 'react';
 
 import Category from './category';
 
-import { createColumns } from './category/columns';
+import { createColumns, DeleteConfirmDialog } from './category/columns';
 
 export default function Takeoff() {
 	const { context } = useMonday();
@@ -37,6 +37,14 @@ export default function Takeoff() {
 		Record<string, boolean>
 	>({});
 
+	// Delete dialog state
+	const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+	const [deleteItem, setDeleteItem] = useState<any>(null);
+
+	// Edit modal state
+	const [editModalOpen, setEditModalOpen] = useState(false);
+	const [selectedItem, setSelectedItem] = useState<any>(null);
+
 	const handleSelectRow = useCallback((id: string, checked: boolean) => {
 		const newSelectedRows = { ...selectedRows, [id]: checked };
 		setSelectedRows(newSelectedRows);
@@ -45,13 +53,30 @@ export default function Takeoff() {
 
 	const handleEdit = useCallback((row: any) => {
 		console.log('Edit row:', row);
-		// Add your edit logic here
+		setSelectedItem(row);
+		setEditModalOpen(true);
+	}, []);
+
+	const handleDuplicate = useCallback((row: any) => {
+		console.log('Duplicate row:', row);
+		// TODO: Implement real mutation here
+		alert(`Duplication de "${row.name}" en cours... (mutation à implémenter)`);
 	}, []);
 
 	const handleDelete = useCallback((id: string) => {
 		console.log('Delete row:', id);
-		// Add your delete logic here
+		// TODO: Implement real mutation here
+		alert(`Suppression de l'élément avec ID ${id} en cours... (mutation à implémenter)`);
+		setDeleteDialogOpen(false);
+		setDeleteItem(null);
 	}, []);
+
+	// Handle delete confirmation
+	const handleDeleteConfirm = useCallback(() => {
+		if (deleteItem) {
+			handleDelete(deleteItem.id);
+		}
+	}, [deleteItem, handleDelete]);
 
 	// Create columns with selection functionality
 	const columns = useMemo(
@@ -60,9 +85,11 @@ export default function Takeoff() {
 				selectedRows,
 				handleSelectRow,
 				onEdit: handleEdit,
-				onDelete: handleDelete,
+				onDuplicate: handleDuplicate,
+				setDeleteDialogOpen,
+				setDeleteItem,
 			}),
-		[selectedRows, handleSelectRow, handleEdit, handleDelete]
+		[selectedRows, handleSelectRow, handleEdit, handleDuplicate]
 	);
 
 	const categories = useMemo(() => {
@@ -86,10 +113,14 @@ export default function Takeoff() {
 					)}
 					takeoff={takeoff}
 					columns={columns}
+					editModalOpen={editModalOpen}
+					setEditModalOpen={setEditModalOpen}
+					selectedItem={selectedItem}
+					setSelectedItem={setSelectedItem}
 				/>
 			),
 		}));
-	}, [categories, mappedLineItems, takeoff, columns]);
+	}, [categories, mappedLineItems, takeoff, columns, editModalOpen, selectedItem]);
 
 	const pages = [
 		{
@@ -149,6 +180,12 @@ export default function Takeoff() {
 					</Tabs>
 				</>
 			)}
+			<DeleteConfirmDialog
+				open={deleteDialogOpen}
+				onOpenChange={setDeleteDialogOpen}
+				onConfirm={handleDeleteConfirm}
+				itemName={deleteItem?.name || ''}
+			/>
 		</>
 	);
 }
