@@ -3,6 +3,7 @@ import { ColumnDef } from "@tanstack/react-table"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Button } from "@/components/ui/button"
 import { Edit, Delete, Duplicate, Close } from '@vibe/icons'
+import { Loader2 } from 'lucide-react'
 import SupplierName from "../supplier-name"
 import { formatCurrency } from "@/lib/utils"
 import { memo } from "react"
@@ -33,6 +34,7 @@ interface ColumnsConfig {
     setDeleteDialogOpen?: (open: boolean) => void;
     deleteItem?: any;
     setDeleteItem?: (item: any) => void;
+    duplicatingItemId?: string | null;
 }
 
 // Delete confirmation dialog component
@@ -74,6 +76,7 @@ export const createColumns = ({
     onDuplicate,
     setDeleteDialogOpen,
     setDeleteItem,
+    duplicatingItemId,
 }: ColumnsConfig): ColumnDef<any>[] => [
     {
         id: 'select',
@@ -203,17 +206,14 @@ export const createColumns = ({
 
             const handleDuplicate = () => {
                 if (onDuplicate) {
-                    // Create a copy of the row data with a new temporary ID
-                    const duplicatedRow = {
-                        ...row.original,
-                        id: `temp_${Date.now()}`, // Temporary ID for the duplicated row
-                        name: `${row.original.name} (Copie)`,
-                    };
-                    onDuplicate(duplicatedRow);
+                    onDuplicate(row.original);
                 } else {
                     console.log('Duplicate:', row.original);
                 }
             };
+
+            const isRowDuplicating = duplicatingItemId === row.original.id;
+            const hasNoId = !row.original.id;
 
             const handleDeleteClick = () => {
                 if (setDeleteItem && setDeleteDialogOpen) {
@@ -239,15 +239,21 @@ export const createColumns = ({
                         size="sm"
                         variant="outline"
                         onClick={handleDuplicate}
-                        title="Dupliquer"
+                        disabled={hasNoId || isRowDuplicating}
+                        title={hasNoId ? "Non disponible pour les templates" : "Dupliquer"}
                     >
-                        <MemoizedDuplicate className="h-4 w-4" />
+                        {isRowDuplicating && !hasNoId ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                            <MemoizedDuplicate className="h-4 w-4" />
+                        )}
                     </Button>
                     <Button
                         size="sm"
                         variant="destructive"
                         onClick={handleDeleteClick}
-                        title="Supprimer"
+                        disabled={hasNoId}
+                        title={hasNoId ? "Non disponible pour les templates" : "Supprimer"}
                     >
                         <MemoizedDelete className="h-4 w-4" />
                     </Button>

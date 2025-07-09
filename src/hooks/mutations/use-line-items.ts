@@ -51,6 +51,8 @@ export const useCreateLineItemsMutation = () => {
     })
 }
 
+
+
 export const useUpdateLineItemsMutation = () => {
     const { settings } = useMonday();
     const { cols, boardId} = getBoardSettings(settings, "LINE_ITEMS")
@@ -82,6 +84,37 @@ export const useUpdateLineItemsMutation = () => {
             } catch (error) {
                 console.error(error)
                 toast.error("Failed to update line items")
+                return null
+            }
+        },
+        onSettled: (_, __, { takeoffId }) => {
+            queryClient.invalidateQueries({
+                queryKey: [QUERY_KEYS.LINE_ITEMS, takeoffId]
+            })
+        }
+    })
+}
+
+export const useDeleteLineItemMutation = () => {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: async ({
+            id,
+            takeoffId
+        }: {
+            id: string
+            takeoffId: string
+        }) => {
+            console.log({id, takeoffId})
+            try {
+                const response = await client.items.delete({
+                    itemId: id
+                })
+                return response
+            } catch (error) {
+                console.error(error)
+                toast.error("Failed to delete line item")
                 return null
             }
         },
