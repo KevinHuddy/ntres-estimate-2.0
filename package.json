@@ -90,7 +90,7 @@
     "tabWidth": 4,
     "useTabs": true,
     "singleQuote": true,
-    "printWidth": 70,
+    "printWidth": 140,
     "trailingComma": "es5"
   }
 }
