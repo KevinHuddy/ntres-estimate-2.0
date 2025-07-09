@@ -6,7 +6,6 @@ import { toast } from "sonner";
 import { useMonday } from "@/components/monday-context-provider";
 import { QUERY_KEYS } from "@/utils/constants"
 import { getBoardSettings } from "@/lib/utils";
-
 const client = new MondayClient()
 
 export const useCreateLineItemsMutation = () => {
@@ -43,15 +42,77 @@ export const useCreateLineItemsMutation = () => {
                 return null
             }
         },
+        onMutate: async ({ name, columns, takeoffId }) => {
+            // Cancel any outgoing refetches
+            await queryClient.cancelQueries({ queryKey: [QUERY_KEYS.LINE_ITEMS, takeoffId] })
+            
+            // Snapshot the previous value
+            const previousLineItems = queryClient.getQueryData([QUERY_KEYS.LINE_ITEMS, takeoffId])
+            
+            // Generate a temporary ID for the new item
+            const tempId = `temp-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+            
+            // Create optimistic line item with parsed column values
+            const optimisticItem = {
+                id: tempId, // Temporary ID to distinguish it
+                name,
+                category: columns[cols.CATEGORY] || '',
+                type: columns[cols.TYPE] || '',
+                unit_type: columns[cols.UNIT_TYPE] || '',
+                qty_takeoff: Number(columns[cols.QTY_TAKEOFF]) || 0,
+                cost_takeoff: Number(columns[cols.COST_TAKEOFF]) || 0,
+                linked_supplier: columns[cols.LINKED_SUPPLIER] || '',
+                values: columns[cols.VALUES] ? columns[cols.VALUES].split(',') : [],
+                waste: Number(columns[cols.WASTE]) || 0,
+                multiplier: Number(columns[cols.MULTIPLIER]) || 0,
+                divider: Number(columns[cols.DIVIDER]) || 0,
+                mo_qty: Number(columns[cols.MO_QTY]) || 0,
+                mo_hours: Number(columns[cols.MO_HOURS]) || 0,
+                mo_days: Number(columns[cols.MO_DAYS]) || 0,
+                linked_activity_code: columns[cols.LINKED_ACTIVITY_CODE] || '',
+                linked_template_line_item: columns[cols.LINKED_TEMPLATE_LINE_ITEM] || '',
+                linked_takeoff: takeoffId,
+                values_total: 0, // Will be calculated by the server
+                // Mark as optimistic to handle UI states
+                _isOptimistic: true,
+            }
+            
+            // Optimistically update the cache
+            queryClient.setQueryData([QUERY_KEYS.LINE_ITEMS, takeoffId], (old: any[]) => {
+                if (!old) return [optimisticItem]
+                return [...old, optimisticItem]
+            })
+            
+            return { previousLineItems, tempId }
+        },
+        onError: (error, { takeoffId }, context) => {
+            // If the mutation fails, use the context returned from onMutate to roll back
+            if (context?.previousLineItems) {
+                queryClient.setQueryData([QUERY_KEYS.LINE_ITEMS, takeoffId], context.previousLineItems)
+            }
+            toast.error("Erreur lors de la création de l'élément")
+        },
+        onSuccess: (data, { takeoffId }, context) => {
+            // Update the cache with the real item data, replacing the temporary one
+            if (data && context?.tempId) {
+                queryClient.setQueryData([QUERY_KEYS.LINE_ITEMS, takeoffId], (old: any[]) => {
+                    if (!old) return old
+                    return old.map((item: any) => 
+                        item.id === context.tempId 
+                            ? { ...item, id: (data as any)?.id || data, _isOptimistic: false } // Replace temp ID with real ID
+                            : item
+                    )
+                })
+            }
+        },
         onSettled: (_, __, { takeoffId }) => {
+            // Remove the setTimeout delay to prevent timing issues
             queryClient.invalidateQueries({
                 queryKey: [QUERY_KEYS.LINE_ITEMS, takeoffId]
             })
         }
     })
 }
-
-
 
 export const useUpdateLineItemsMutation = () => {
     const { settings } = useMonday();
@@ -87,7 +148,63 @@ export const useUpdateLineItemsMutation = () => {
                 return null
             }
         },
+        onMutate: async ({ id, columns, takeoffId }) => {
+            // Cancel any outgoing refetches
+            await queryClient.cancelQueries({ queryKey: [QUERY_KEYS.LINE_ITEMS, takeoffId] })
+            
+            // Snapshot the previous value
+            const previousLineItems = queryClient.getQueryData([QUERY_KEYS.LINE_ITEMS, takeoffId])
+            
+            // Optimistically update the cache
+            queryClient.setQueryData([QUERY_KEYS.LINE_ITEMS, takeoffId], (old: any[]) => {
+                if (!old) return old
+                return old.map((item: any) => {
+                    if (item.id === id) {
+                        return {
+                            ...item,
+                            category: columns[cols.CATEGORY] || item.category,
+                            type: columns[cols.TYPE] || item.type,
+                            unit_type: columns[cols.UNIT_TYPE] || item.unit_type,
+                            qty_takeoff: columns[cols.QTY_TAKEOFF] ? Number(columns[cols.QTY_TAKEOFF]) : item.qty_takeoff,
+                            cost_takeoff: columns[cols.COST_TAKEOFF] ? Number(columns[cols.COST_TAKEOFF]) : item.cost_takeoff,
+                            linked_supplier: columns[cols.LINKED_SUPPLIER] || item.linked_supplier,
+                            values: columns[cols.VALUES] ? columns[cols.VALUES].split(',') : item.values,
+                            waste: columns[cols.WASTE] ? Number(columns[cols.WASTE]) : item.waste,
+                            multiplier: columns[cols.MULTIPLIER] ? Number(columns[cols.MULTIPLIER]) : item.multiplier,
+                            divider: columns[cols.DIVIDER] ? Number(columns[cols.DIVIDER]) : item.divider,
+                            mo_qty: columns[cols.MO_QTY] ? Number(columns[cols.MO_QTY]) : item.mo_qty,
+                            mo_hours: columns[cols.MO_HOURS] ? Number(columns[cols.MO_HOURS]) : item.mo_hours,
+                            mo_days: columns[cols.MO_DAYS] ? Number(columns[cols.MO_DAYS]) : item.mo_days,
+                            linked_activity_code: columns[cols.LINKED_ACTIVITY_CODE] || item.linked_activity_code,
+                            linked_template_line_item: columns[cols.LINKED_TEMPLATE_LINE_ITEM] || item.linked_template_line_item,
+                            _isOptimistic: true,
+                        }
+                    }
+                    return item
+                })
+            })
+            
+            return { previousLineItems }
+        },
+        onError: (error, { takeoffId }, context) => {
+            // If the mutation fails, use the context returned from onMutate to roll back
+            if (context?.previousLineItems) {
+                queryClient.setQueryData([QUERY_KEYS.LINE_ITEMS, takeoffId], context.previousLineItems)
+            }
+            toast.error("Erreur lors de la mise à jour de l'élément")
+        },
+        onSuccess: (data, { takeoffId }) => {
+            // Mark optimistic update as complete
+            queryClient.setQueryData([QUERY_KEYS.LINE_ITEMS, takeoffId], (old: any[]) => {
+                if (!old) return old
+                return old.map((item: any) => ({
+                    ...item,
+                    _isOptimistic: false
+                }))
+            })
+        },
         onSettled: (_, __, { takeoffId }) => {
+            // Remove the setTimeout delay to prevent timing issues
             queryClient.invalidateQueries({
                 queryKey: [QUERY_KEYS.LINE_ITEMS, takeoffId]
             })
@@ -109,16 +226,39 @@ export const useDeleteLineItemMutation = () => {
             console.log({id, takeoffId})
             try {
                 const response = await client.items.delete({
-                    itemId: id
+                    itemId: id,
                 })
                 return response
             } catch (error) {
                 console.error(error)
-                toast.error("Failed to delete line item")
+                toast.error("Failed to delete line items")
                 return null
             }
         },
+        onMutate: async ({ id, takeoffId }) => {
+            // Cancel any outgoing refetches
+            await queryClient.cancelQueries({ queryKey: [QUERY_KEYS.LINE_ITEMS, takeoffId] })
+            
+            // Snapshot the previous value
+            const previousLineItems = queryClient.getQueryData([QUERY_KEYS.LINE_ITEMS, takeoffId])
+            
+            // Optimistically remove the item from the cache
+            queryClient.setQueryData([QUERY_KEYS.LINE_ITEMS, takeoffId], (old: any[]) => {
+                if (!old) return old
+                return old.filter((item: any) => item.id !== id)
+            })
+            
+            return { previousLineItems }
+        },
+        onError: (error, { takeoffId }, context) => {
+            // If the mutation fails, use the context returned from onMutate to roll back
+            if (context?.previousLineItems) {
+                queryClient.setQueryData([QUERY_KEYS.LINE_ITEMS, takeoffId], context.previousLineItems)
+            }
+            toast.error("Erreur lors de la suppression de l'élément")
+        },
         onSettled: (_, __, { takeoffId }) => {
+            // Remove the setTimeout delay to prevent timing issues
             queryClient.invalidateQueries({
                 queryKey: [QUERY_KEYS.LINE_ITEMS, takeoffId]
             })

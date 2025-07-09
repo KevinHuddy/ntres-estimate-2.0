@@ -37,6 +37,7 @@ const formSchema = z.object({
 	CONTRACTS: z.string(),
 	SUPPLIERS: z.string(),
 	PRODUCTS: z.string(),
+	ACTIVITY_CODES: z.string(),
 });
 
 export default function SettingsForm({ initialConfig, debug = false }: { initialConfig: any, debug?: boolean }) {
@@ -69,6 +70,7 @@ export default function SettingsForm({ initialConfig, debug = false }: { initial
 					CONTRACTS: values.CONTRACTS,
 					SUPPLIERS: values.SUPPLIERS,
 					PRODUCTS: values.PRODUCTS,
+					ACTIVITY_CODES: values.ACTIVITY_CODES,
 				}
 			};
 
@@ -242,6 +244,22 @@ export default function SettingsForm({ initialConfig, debug = false }: { initial
 								<FormItem className="flex flex-col">
 									<FormLabel>
 										Produits
+									</FormLabel>
+									<MondayBoardCombobox
+										onSelect={field.onChange}
+										value={field.value}
+									/>
+									<FormMessage />
+								</FormItem>
+							)}
+						/>
+						<FormField
+							control={form.control}
+							name="ACTIVITY_CODES"
+							render={({ field }) => (
+								<FormItem className="flex flex-col">
+									<FormLabel>
+										Code d&apos;activité
 									</FormLabel>
 									<MondayBoardCombobox
 										onSelect={field.onChange}

@@ -1,8 +1,8 @@
-import { DataTable } from "../data-table";
+import { MemoizedDataTable } from "../data-table";
 import TakeoffCategoryHeader from "./header";
 import { SearchFilter, TypeFilter, useDataFilters } from "./filters";
 import { useSuppliers } from "@/hooks/queries/use-suppliers";
-import { useMemo } from "react";
+import { useMemo, useCallback } from "react";
 import EditModal from "./edit-modal";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
@@ -55,13 +55,13 @@ export default function Category({
 		filteredData,
 	} = useDataFilters(enrichedLines);
 
-	// Handle row click to open edit modal
-	const handleRowClick = (row: any) => {
+	// Handle row click to open edit modal - memoized to prevent recreation
+	const handleRowClick = useCallback((row: any) => {
 		if (setSelectedItem && setEditModalOpen) {
 			setSelectedItem(row);
 			setEditModalOpen(true);
 		}
-	};
+	}, [setSelectedItem, setEditModalOpen]);
 
 	return (
 		<div className="h-full flex flex-col gap-6">
@@ -96,7 +96,7 @@ export default function Category({
 				</div>
 			</div>
 
-			<DataTable
+			<MemoizedDataTable
 				data={filteredData}
 				columns={columns}
 				onRowClick={handleRowClick}

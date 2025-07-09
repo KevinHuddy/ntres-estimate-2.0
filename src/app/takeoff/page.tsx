@@ -16,12 +16,15 @@ import { useTakeoffData, useAdminFees } from '@/hooks/queries';
 import { useMappedLineItems } from '@/hooks/compounds/use-mapped-line-items';
 import { useCreateLineItemsMutation, useDeleteLineItemMutation } from '@/hooks/mutations/use-line-items';
 import { getBoardSettings } from '@/lib/utils';
-import { useMemo, useState, useCallback } from 'react';
+import { useMemo, useState, useCallback, memo, useRef } from 'react';
 
 import Category from './category';
 
 import { createColumns, DeleteConfirmDialog } from './category/columns';
 import { toast } from 'sonner';
+
+// Memoize the Category component to prevent unnecessary re-renders
+const MemoizedCategory = memo(Category);
 
 export default function Takeoff() {
 	const { context, settings } = useMonday();
@@ -39,8 +42,9 @@ export default function Takeoff() {
 	const createLineItemMutation = useCreateLineItemsMutation();
 	const deleteLineItemMutation = useDeleteLineItemMutation();
 
-	// Duplication state
-	const [duplicatingItemId, setDuplicatingItemId] = useState<string | null>(null);
+	// Use a ref to track duplicating items to prevent re-renders
+	const duplicatingItemsRef = useRef<Set<string>>(new Set());
+	const [, forceUpdate] = useState({});
 
 	// Selection state management
 	const [selectedRows, setSelectedRows] = useState<
@@ -55,11 +59,10 @@ export default function Takeoff() {
 	const [editModalOpen, setEditModalOpen] = useState(false);
 	const [selectedItem, setSelectedItem] = useState<any>(null);
 
+	// Fix: Remove selectedRows from dependencies to prevent unnecessary re-renders
 	const handleSelectRow = useCallback((id: string, checked: boolean) => {
-		const newSelectedRows = { ...selectedRows, [id]: checked };
-		setSelectedRows(newSelectedRows);
-		console.log(newSelectedRows);
-	}, [selectedRows]);
+		setSelectedRows(prev => ({ ...prev, [id]: checked }));
+	}, []);
 
 	const handleEdit = useCallback((row: any) => {
 		console.log('Edit row:', row);
@@ -67,12 +70,22 @@ export default function Takeoff() {
 		setEditModalOpen(true);
 	}, []);
 
+	// Memoize the board settings to prevent recalculation
+	const boardSettings = useMemo(() => 
+		getBoardSettings(settings, "LINE_ITEMS"), 
+		[settings]
+	);
+
 	const handleDuplicate = useCallback(async (row: any) => {
+		const rowId = row.id;
+		
+		// Add to duplicating set and force update
+		duplicatingItemsRef.current.add(rowId);
+		forceUpdate({});
+		
 		try {
-			setDuplicatingItemId(row.id);
-			
-			// Map original item data to columns format
-			const { cols } = getBoardSettings(settings, "LINE_ITEMS");
+			// Use memoized board settings
+			const { cols } = boardSettings;
 			const columns = {
 				[cols.CATEGORY]: row.category || '',
 				[cols.TYPE]: row.type || '',
@@ -103,9 +116,11 @@ export default function Takeoff() {
 			console.error('Error duplicating line item:', error);
 			toast.error('Erreur lors de la duplication');
 		} finally {
-			setDuplicatingItemId(null);
+			// Remove from duplicating set and force update
+			duplicatingItemsRef.current.delete(rowId);
+			forceUpdate({});
 		}
-	}, [createLineItemMutation, itemId, settings]);
+	}, [createLineItemMutation, itemId, boardSettings]);
 
 	const handleDelete = useCallback(async (id: string) => {
 		try {
@@ -129,7 +144,21 @@ export default function Takeoff() {
 		}
 	}, [deleteItem, handleDelete]);
 
-	// Create columns with selection functionality
+	// Memoize delete dialog handlers to prevent re-renders
+	const handleSetDeleteDialogOpen = useCallback((open: boolean) => {
+		setDeleteDialogOpen(open);
+	}, []);
+
+	const handleSetDeleteItem = useCallback((item: any) => {
+		setDeleteItem(item);
+	}, []);
+
+	// Check if an item is duplicating using the mutation state
+	const isDuplicating = useCallback((itemId: string) => {
+		return duplicatingItemsRef.current.has(itemId);
+	}, []);
+
+	// Create columns with stable references - only recreate when handlers change
 	const columns = useMemo(
 		() =>
 			createColumns({
@@ -137,11 +166,11 @@ export default function Takeoff() {
 				handleSelectRow,
 				onEdit: handleEdit,
 				onDuplicate: handleDuplicate,
-				setDeleteDialogOpen,
-				setDeleteItem,
-				duplicatingItemId,
+				setDeleteDialogOpen: handleSetDeleteDialogOpen,
+				setDeleteItem: handleSetDeleteItem,
+				isDuplicating,
 			}),
-		[selectedRows, handleSelectRow, handleEdit, handleDuplicate, duplicatingItemId]
+		[selectedRows, handleSelectRow, handleEdit, handleDuplicate, handleSetDeleteDialogOpen, handleSetDeleteItem, isDuplicating]
 	);
 
 	const categories = useMemo(() => {
@@ -158,7 +187,8 @@ export default function Takeoff() {
 		return categories.map((category) => ({
 			label: category,
 			component: (
-				<Category
+				<MemoizedCategory
+					key={category}
 					category={category}
 					lines={mappedLineItems?.filter(
 						(line) => line?.category === category
@@ -174,7 +204,7 @@ export default function Takeoff() {
 		}));
 	}, [categories, mappedLineItems, takeoff, columns, editModalOpen, selectedItem]);
 
-	const pages = [
+	const pages = useMemo(() => [
 		{
 			label: 'Projet',
 			component: (
@@ -187,18 +217,16 @@ export default function Takeoff() {
 			),
 		},
 		...categoryPages,
-	];
+	], [takeoff, adminFees, mappedLineItems, categories, categoryPages]);
+
+	const isLoading = takeoffLoading || mappedLineItemsLoading || adminFeesLoading;
 
 	return (
 		<>
 			<Header>
 				{!takeoff?.disabled && (
 					<HeaderActions
-						isLoading={
-							takeoffLoading ||
-							mappedLineItemsLoading ||
-							adminFeesLoading
-						}
+						isLoading={isLoading}
 					/>
 				)}
 			</Header>
@@ -234,7 +262,7 @@ export default function Takeoff() {
 			)}
 			<DeleteConfirmDialog
 				open={deleteDialogOpen}
-				onOpenChange={setDeleteDialogOpen}
+				onOpenChange={handleSetDeleteDialogOpen}
 				onConfirm={handleDeleteConfirm}
 				itemName={deleteItem?.name || ''}
 			/>

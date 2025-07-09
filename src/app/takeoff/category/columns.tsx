@@ -6,7 +6,7 @@ import { Edit, Delete, Duplicate, Close } from '@vibe/icons'
 import { Loader2 } from 'lucide-react'
 import SupplierName from "../supplier-name"
 import { formatCurrency } from "@/lib/utils"
-import { memo } from "react"
+import { memo, useCallback } from "react"
 import {
     AlertDialog,
     AlertDialogAction,
@@ -34,7 +34,7 @@ interface ColumnsConfig {
     setDeleteDialogOpen?: (open: boolean) => void;
     deleteItem?: any;
     setDeleteItem?: (item: any) => void;
-    duplicatingItemId?: string | null;
+    isDuplicating?: (itemId: string) => boolean;
 }
 
 // Delete confirmation dialog component
@@ -69,6 +69,130 @@ function DeleteConfirmDialog({
     );
 }
 
+// Memoized action buttons component to prevent unnecessary re-renders
+const ActionButtons = memo(({ 
+    row, 
+    onEdit, 
+    onDuplicate, 
+    setDeleteDialogOpen, 
+    setDeleteItem, 
+    isDuplicating 
+}: {
+    row: any;
+    onEdit?: (row: any) => void;
+    onDuplicate?: (row: any) => void;
+    setDeleteDialogOpen?: (open: boolean) => void;
+    setDeleteItem?: (item: any) => void;
+    isDuplicating?: (itemId: string) => boolean;
+}) => {
+    const handleEdit = useCallback((e: React.MouseEvent) => {
+        e.stopPropagation();
+        e.preventDefault();
+        if (onEdit) {
+            onEdit(row);
+        } else {
+            console.log('Edit:', row);
+        }
+    }, [onEdit, row]);
+
+    const handleDuplicate = useCallback((e: React.MouseEvent) => {
+        e.stopPropagation();
+        e.preventDefault();
+        if (onDuplicate) {
+            onDuplicate(row);
+        } else {
+            console.log('Duplicate:', row);
+        }
+    }, [onDuplicate, row]);
+
+    const handleDeleteClick = useCallback((e: React.MouseEvent) => {
+        e.stopPropagation();
+        e.preventDefault();
+        if (setDeleteItem && setDeleteDialogOpen) {
+            setDeleteItem(row);
+            setDeleteDialogOpen(true);
+        }
+    }, [setDeleteItem, setDeleteDialogOpen, row]);
+
+    const isRowDuplicating = isDuplicating ? isDuplicating(row.id) : false;
+    const hasNoId = !row.id;
+
+    return (
+        <div
+            className="flex gap-2"
+            onClick={(e) => e.stopPropagation()}
+        >
+            <Button
+                size="sm"
+                variant="outline"
+                onClick={handleEdit}
+                title="Modifier"
+                type="button"
+                disabled={isRowDuplicating}
+            >
+                <MemoizedEdit className="h-4 w-4" />
+            </Button>
+            <Button
+                size="sm"
+                variant="outline"
+                onClick={handleDuplicate}
+                disabled={hasNoId || isRowDuplicating}
+                title={hasNoId ? "Non disponible pour les templates" : "Dupliquer"}
+                type="button"
+            >
+                {isRowDuplicating && !hasNoId ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                    <MemoizedDuplicate className="h-4 w-4" />
+                )}
+            </Button>
+            <Button
+                size="sm"
+                variant="destructive"
+                onClick={handleDeleteClick}
+                disabled={hasNoId || isRowDuplicating}
+                title={hasNoId ? "Non disponible pour les templates" : "Supprimer"}
+                type="button"
+            >
+                <MemoizedDelete className="h-4 w-4" />
+            </Button>
+        </div>
+    );
+});
+
+ActionButtons.displayName = "ActionButtons";
+
+// Memoized checkbox component
+const SelectCell = memo(({ row, selectedRows, handleSelectRow }: {
+    row: any;
+    selectedRows: Record<string, boolean>;
+    handleSelectRow: (id: string, checked: boolean) => void;
+}) => {
+    const handleCheckboxChange = useCallback((value: boolean) => {
+        handleSelectRow(row.original.id, value);
+    }, [handleSelectRow, row.original.id]);
+
+    const handleClick = useCallback((e: React.MouseEvent) => {
+        e.stopPropagation();
+    }, []);
+
+    return (
+        <div onClick={handleClick}>
+            {!!row.original.id ? (
+                <Checkbox
+                    checked={selectedRows[row.original.id] || false}
+                    onCheckedChange={handleCheckboxChange}
+                    aria-label="Select row"
+                />
+            ) : (
+                <MemoizedClose className="h-4 w-4 text-muted-foreground/40" />
+            )}
+        </div>
+    );
+});
+
+SelectCell.displayName = "SelectCell";
+
 export const createColumns = ({ 
     selectedRows,
     handleSelectRow, 
@@ -76,26 +200,18 @@ export const createColumns = ({
     onDuplicate,
     setDeleteDialogOpen,
     setDeleteItem,
-    duplicatingItemId,
+    isDuplicating,
 }: ColumnsConfig): ColumnDef<any>[] => [
     {
         id: 'select',
         size: 20,
         enableResizing: false,
         cell: ({ row }) => (
-            <div onClick={(e) => e.stopPropagation()}>
-                { !!row.original.id ? (
-                    <Checkbox
-                        checked={selectedRows[row.original.id] || false}
-                        onCheckedChange={(value) =>
-                            handleSelectRow(row.original.id, !!value)
-                        }
-                        aria-label="Select row"
-                        />
-                ) : (
-                    <MemoizedClose className="h-4 w-4 text-muted-foreground/40" />
-                )}
-            </div>
+            <SelectCell
+                row={row}
+                selectedRows={selectedRows}
+                handleSelectRow={handleSelectRow}
+            />
         )
     },
     {
@@ -195,71 +311,16 @@ export const createColumns = ({
             </div>
         ),
         size: 100,
-        cell: ({ row }) => {
-            const handleEdit = () => {
-                if (onEdit) {
-                    onEdit(row.original);
-                } else {
-                    console.log('Edit:', row.original);
-                }
-            };
-
-            const handleDuplicate = () => {
-                if (onDuplicate) {
-                    onDuplicate(row.original);
-                } else {
-                    console.log('Duplicate:', row.original);
-                }
-            };
-
-            const isRowDuplicating = duplicatingItemId === row.original.id;
-            const hasNoId = !row.original.id;
-
-            const handleDeleteClick = () => {
-                if (setDeleteItem && setDeleteDialogOpen) {
-                    setDeleteItem(row.original);
-                    setDeleteDialogOpen(true);
-                }
-            };
-
-            return (
-                <div
-                    className="flex gap-2"
-                    onClick={(e) => e.stopPropagation()}
-                >
-                    <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={handleEdit}
-                        title="Modifier"
-                    >
-                        <MemoizedEdit className="h-4 w-4" />
-                    </Button>
-                    <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={handleDuplicate}
-                        disabled={hasNoId || isRowDuplicating}
-                        title={hasNoId ? "Non disponible pour les templates" : "Dupliquer"}
-                    >
-                        {isRowDuplicating && !hasNoId ? (
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                        ) : (
-                            <MemoizedDuplicate className="h-4 w-4" />
-                        )}
-                    </Button>
-                    <Button
-                        size="sm"
-                        variant="destructive"
-                        onClick={handleDeleteClick}
-                        disabled={hasNoId}
-                        title={hasNoId ? "Non disponible pour les templates" : "Supprimer"}
-                    >
-                        <MemoizedDelete className="h-4 w-4" />
-                    </Button>
-                </div>
-            );
-        },
+        cell: ({ row }) => (
+            <ActionButtons
+                row={row.original}
+                onEdit={onEdit}
+                onDuplicate={onDuplicate}
+                setDeleteDialogOpen={setDeleteDialogOpen}
+                setDeleteItem={setDeleteItem}
+                isDuplicating={isDuplicating}
+            />
+        ),
     },
 ];
 
