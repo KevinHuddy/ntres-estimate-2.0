@@ -3,7 +3,7 @@ import { ColumnDef } from "@tanstack/react-table"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Button } from "@/components/ui/button"
 import { Edit, Delete, Duplicate, Close } from '@vibe/icons'
-import { Loader2 } from 'lucide-react'
+import { Loader2, MoreHorizontal } from 'lucide-react'
 import SupplierName from "../supplier-name"
 import { formatCurrency } from "@/lib/utils"
 import { memo, useCallback } from "react"
@@ -17,6 +17,12 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 
 // Memoized icon components to reduce SVG rendering overhead
 const MemoizedEdit = memo(Edit);
@@ -69,8 +75,8 @@ function DeleteConfirmDialog({
     );
 }
 
-// Memoized action buttons component to prevent unnecessary re-renders
-const ActionButtons = memo(({ 
+// Memoized dropdown actions component to prevent unnecessary re-renders
+const ActionsDropdown = memo(({ 
     row, 
     onEdit, 
     onDuplicate, 
@@ -119,48 +125,56 @@ const ActionButtons = memo(({
 
     return (
         <div
-            className="flex gap-2"
+            className="flex justify-center"
             onClick={(e) => e.stopPropagation()}
         >
-            <Button
-                size="sm"
-                variant="outline"
-                onClick={handleEdit}
-                title="Modifier"
-                type="button"
-                disabled={isRowDuplicating}
-            >
-                <MemoizedEdit className="h-4 w-4" />
-            </Button>
-            <Button
-                size="sm"
-                variant="outline"
-                onClick={handleDuplicate}
-                disabled={hasNoId || isRowDuplicating}
-                title={hasNoId ? "Non disponible pour les templates" : "Dupliquer"}
-                type="button"
-            >
-                {isRowDuplicating && !hasNoId ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                    <MemoizedDuplicate className="h-4 w-4" />
-                )}
-            </Button>
-            <Button
-                size="sm"
-                variant="destructive"
-                onClick={handleDeleteClick}
-                disabled={hasNoId || isRowDuplicating}
-                title={hasNoId ? "Non disponible pour les templates" : "Supprimer"}
-                type="button"
-            >
-                <MemoizedDelete className="h-4 w-4" />
-            </Button>
+            <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                    <Button
+                        variant="ghost"
+                        className="h-8 w-8 p-0"
+                        disabled={isRowDuplicating}
+                    >
+                        <span className="sr-only">Ouvrir le menu</span>
+                        <MoreHorizontal className="h-4 w-4" />
+                    </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                    <DropdownMenuItem
+                        onClick={handleEdit}
+                        disabled={isRowDuplicating}
+                        className="cursor-pointer"
+                    >
+                        <MemoizedEdit className="mr-2 h-4 w-4" />
+                        Modifier
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                        onClick={handleDuplicate}
+                        disabled={hasNoId || isRowDuplicating}
+                        className="cursor-pointer"
+                    >
+                        {isRowDuplicating && !hasNoId ? (
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        ) : (
+                            <MemoizedDuplicate className="mr-2 h-4 w-4" />
+                        )}
+                        Dupliquer
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                        onClick={handleDeleteClick}
+                        disabled={hasNoId || isRowDuplicating}
+                        className="cursor-pointer text-destructive focus:text-destructive"
+                    >
+                        <MemoizedDelete className="mr-2 h-4 w-4" />
+                        Supprimer
+                    </DropdownMenuItem>
+                </DropdownMenuContent>
+            </DropdownMenu>
         </div>
     );
 });
 
-ActionButtons.displayName = "ActionButtons";
+ActionsDropdown.displayName = "ActionsDropdown";
 
 // Memoized checkbox component
 const SelectCell = memo(({ row, selectedRows, handleSelectRow }: {
@@ -226,20 +240,28 @@ export const createColumns = ({
     },
     {
         accessorKey: 'type',
-        header: 'Type',
+        header: () => (
+            <div className="w-full relative after:absolute after:left--1 after:top-0 after:w-px after:h-full after:bg-border">
+                Type
+            </div>
+        ),
         size: 120,
         cell: ({ row }) => (
-            <div className="truncate pr-2" title={row.original.type}>
+            <div className="truncate pr-2 " title={row.original.type}>
                 {row.original.type}
             </div>
         )
     },
     {
         accessorKey: 'unit_type',
-        header: 'Unité',
+        header: () => (
+            <div className="text-right w-full border-l-1">
+                Unité
+            </div>
+        ),
         size: 60,
         cell: ({ row }) => (
-            <div className="truncate pr-2" title={row.original.unit_type}>
+            <div className="truncate pr-2 border-l-1" title={row.original.unit_type}>
                 {row.original.unit_type}
             </div>
         )
@@ -298,14 +320,10 @@ export const createColumns = ({
     },
     {
         id: 'actions',
-        header: () => (
-            <div className="w-full">
-                Actions
-            </div>
-        ),
-        size: 100,
+        header: () => null,
+        size: 30,
         cell: ({ row }) => (
-            <ActionButtons
+            <ActionsDropdown
                 row={row.original}
                 onEdit={onEdit}
                 onDuplicate={onDuplicate}

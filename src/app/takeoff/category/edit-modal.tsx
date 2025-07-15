@@ -221,6 +221,7 @@ export default function EditModal({ open, onOpenChange, item }: EditModalProps) 
 		const { cols } = getBoardSettings(settings, 'LINE_ITEMS');
 
 		const columns: any = {
+            name: data.name,
 			[cols.CATEGORY]: data.category,
 			[cols.QTY_TAKEOFF]: data.qty_takeoff.toString(),
 			[cols.COST_TAKEOFF]: data.cost_takeoff.toString(),
@@ -268,7 +269,7 @@ export default function EditModal({ open, onOpenChange, item }: EditModalProps) 
 			} else {
 				// Create new line item
 				await createLineItemMutation.mutateAsync({
-					name: data.name,
+					name: columns.name || data.name,
 					columns,
 					takeoffId: context?.itemId || '',
 				});
@@ -294,9 +295,6 @@ export default function EditModal({ open, onOpenChange, item }: EditModalProps) 
 						<DialogTitle>Modifier l&apos;élément</DialogTitle>
 					</DialogHeader>
 
-                    <pre className="text-xs text-muted-foreground">
-                        {JSON.stringify(settings, null, 2)}
-                    </pre>
 
 					<Form {...form}>
 						<form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -410,7 +408,7 @@ export default function EditModal({ open, onOpenChange, item }: EditModalProps) 
 														<FormLabel>Fournisseur</FormLabel>
 														<Select onValueChange={field.onChange} value={field.value}>
 															<FormControl>
-																<SelectTrigger className="w-full">
+																<SelectTrigger className="w-full truncate">
 																	<SelectValue placeholder="Sélectionner un fournisseur" />
 																</SelectTrigger>
 															</FormControl>

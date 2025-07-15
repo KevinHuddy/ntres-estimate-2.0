@@ -51,6 +51,8 @@ export const useCreateLineItemsMutation = () => {
             
             // Generate a temporary ID for the new item
             const tempId = `temp-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+
+            console.log({name, columns, takeoffId})
             
             // Create optimistic line item with parsed column values
             const optimisticItem = {
@@ -158,6 +160,7 @@ export const useUpdateLineItemsMutation = () => {
                     if (item.id === id) {
                         return {
                             ...item,
+                            name: columns.name || item.name,
                             category: columns[cols.CATEGORY] || item.category,
                             type: columns[cols.TYPE] || item.type,
                             unit_type: columns[cols.UNIT_TYPE] || item.unit_type,
