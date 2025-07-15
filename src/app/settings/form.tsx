@@ -29,20 +29,21 @@ import { Separator } from '@/components/ui/separator';
 
 
 const formSchema = z.object({
-	BOARD_TAKEOFF: z.string(),
-    BOARD_LINE_ITEMS: z.string(),
-    BOARD_TEMPLATE_LINE_ITEMS: z.string(),
-    BOARD_ADMIN_FEES: z.string(),
-    BOARD_VARIABLES: z.string(),
-    BOARD_QUOTES: z.string(),
-    BOARD_CONTRACTS: z.string(),
-    BOARD_SUPPLIERS: z.string(),
-    BOARD_PRODUCTS: z.string(),
-    BOARD_ACTIVITY_CODES: z.string(),
-    BOARD_TOOLS: z.string(),
+	BOARD_TAKEOFF: z.string().optional(),
+    BOARD_LINE_ITEMS: z.string().optional(),
+    BOARD_TEMPLATE_LINE_ITEMS: z.string().optional(),
+    BOARD_ADMIN_FEES: z.string().optional(),
+    BOARD_VARIABLES: z.string().optional(),
+    BOARD_QUOTES: z.string().optional(),
+    BOARD_CONTRACTS: z.string().optional(),
+    BOARD_SUPPLIERS: z.string().optional(),
+    BOARD_PRODUCTS: z.string().optional(),
+    BOARD_ACTIVITY_CODES: z.string().optional(),
+    BOARD_TOOLS: z.string().optional(),
+    BOARD_PRICE_REQUEST: z.string().optional(),
 
-    CATEGORY_TOOLS: z.string(),
-    CATEGORY_MO: z.string(),
+    CATEGORY_TOOLS: z.string().optional(),
+    CATEGORY_MO: z.string().optional(),
 });
 
 export default function SettingsForm({ initialConfig, debug = false }: { initialConfig: any, debug?: boolean }) {
@@ -71,6 +72,7 @@ export default function SettingsForm({ initialConfig, debug = false }: { initial
             BOARD_PRODUCTS: initialConfig?.BOARDS?.PRODUCTS || "",
             BOARD_ACTIVITY_CODES: initialConfig?.BOARDS?.ACTIVITY_CODES || "",
             BOARD_TOOLS: initialConfig?.BOARDS?.TOOLS || "",
+            BOARD_PRICE_REQUEST: initialConfig?.BOARDS?.PRICE_REQUEST || "",
             CATEGORY_TOOLS: initialConfig?.CATEGORIES?.TOOLS || "",
             CATEGORY_MO: initialConfig?.CATEGORIES?.MO || "",
         }
@@ -95,6 +97,7 @@ export default function SettingsForm({ initialConfig, debug = false }: { initial
                 BOARD_PRODUCTS: values.BOARD_PRODUCTS || "",
                 BOARD_ACTIVITY_CODES: values.BOARD_ACTIVITY_CODES || "",
                 BOARD_TOOLS: values.BOARD_TOOLS || "",
+                BOARD_PRICE_REQUEST: values.BOARD_PRICE_REQUEST || "",
                 CATEGORY_TOOLS: values.CATEGORY_TOOLS || "",
                 CATEGORY_MO: values.CATEGORY_MO || "",
 			};
@@ -297,6 +300,22 @@ export default function SettingsForm({ initialConfig, debug = false }: { initial
 								<FormItem className="flex flex-col">
 									<FormLabel>
 										Équipements & Outils
+									</FormLabel>
+									<MondayBoardCombobox
+										onSelect={field.onChange}
+										value={field.value}
+									/>
+									<FormMessage />
+								</FormItem>
+							)}
+						/>
+                        <FormField
+							control={form.control}
+							name="BOARD_PRICE_REQUEST"
+							render={({ field }) => (
+								<FormItem className="flex flex-col">
+									<FormLabel>
+										Demande de prix
 									</FormLabel>
 									<MondayBoardCombobox
 										onSelect={field.onChange}

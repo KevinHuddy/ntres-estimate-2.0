@@ -27,6 +27,7 @@ const query = `
         $variablesBoardId: [ID!]
         $adminFeesBoardId: [ID!]
         $productsBoardId: [ID!]
+        $priceRequestBoardId: [ID!]
     ) {
         complexity {
             before
@@ -38,6 +39,7 @@ const query = `
         variables: boards(ids: $variablesBoardId) { ...ColumnsFragment }
         adminFees: boards(ids: $adminFeesBoardId) { ...ColumnsFragment }
         products: boards(ids: $productsBoardId) { ...ColumnsFragment }
+        priceRequest: boards(ids: $priceRequestBoardId) { ...ColumnsFragment }
     }`
 
 
@@ -55,7 +57,8 @@ const COLUMNS = ({
     lineItemsCols,
     variablesCols,
     adminFeesCols,
-    productsCols
+    productsCols,
+    priceRequestCols,
 }: {
     takeoffCols: any,
     templateLineItemsCols: any,
@@ -63,6 +66,7 @@ const COLUMNS = ({
     variablesCols: any,
     adminFeesCols: any,
     productsCols: any,
+    priceRequestCols: any,
 }) => {
     return {
         TAKEOFF: {
@@ -131,6 +135,11 @@ const COLUMNS = ({
             MARGIN: getColId(adminFeesCols, "{{{margin}}}"),
             UNFORESEEN: getColId(adminFeesCols, "{{{unforeseen}}}"),
             OTHER: getColId(adminFeesCols, "{{{other}}}"),
+        },
+        PRICE_REQUEST: {
+            LINKED_TAKEOFF: getColId(priceRequestCols, "{{{linked_takeoff}}}"),
+            LINKED_SUPPLIER: getColId(priceRequestCols, "{{{linked_supplier}}}"),
+            LINKED_PROJECT: getColId(priceRequestCols, "{{{linked_project}}}"),
         }
     }
 }
@@ -152,7 +161,8 @@ export const useGetSettings = (options: any = {}): UseQueryResult<any> => {
                         takeoffBoardId: mainSettings?.BOARD_TAKEOFF,
                         variablesBoardId: mainSettings?.BOARD_VARIABLES,
                         adminFeesBoardId: mainSettings?.BOARD_ADMIN_FEES,
-                        productsBoardId: mainSettings?.BOARD_PRODUCTS
+                        productsBoardId: mainSettings?.BOARD_PRODUCTS,
+                        priceRequestBoardId: mainSettings?.BOARD_PRICE_REQUEST,
                     }
                 })
 
@@ -164,7 +174,8 @@ export const useGetSettings = (options: any = {}): UseQueryResult<any> => {
                     lineItemsCols: columnSettings?.data?.lineItems?.[0]?.columns,
                     variablesCols: columnSettings?.data?.variables?.[0]?.columns,
                     adminFeesCols: columnSettings?.data?.adminFees?.[0]?.columns,
-                    productsCols: columnSettings?.data?.products?.[0]?.columns
+                    productsCols: columnSettings?.data?.products?.[0]?.columns,
+                    priceRequestCols: columnSettings?.data?.priceRequest?.[0]?.columns,
                 })
 
                 return {
@@ -180,6 +191,7 @@ export const useGetSettings = (options: any = {}): UseQueryResult<any> => {
                         PRODUCTS: mainSettings?.BOARD_PRODUCTS,
                         ACTIVITY_CODES: mainSettings?.BOARD_ACTIVITY_CODES,
                         TOOLS: mainSettings?.BOARD_TOOLS,
+                        PRICE_REQUEST: mainSettings?.BOARD_PRICE_REQUEST,
                     },
                     CATEGORIES: {
                         TOOLS: mainSettings?.CATEGORY_TOOLS,

@@ -12,6 +12,7 @@ export const QUERY_KEYS = {
     SUPPLIERS: 'suppliers',
     ACTIVITY_CODES: 'activity-codes',
     PRODUCTS: 'products',
+    PRICE_REQUEST: 'price-request',
 }
 
 export const CACHE_TIMES = {

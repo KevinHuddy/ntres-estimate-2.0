@@ -1,13 +1,18 @@
 import SettingsButton from "./takeoff-settings";
 import CreateQuoteButton from "./create-quote-button";
+import PriceRequestButton from "./price-request-button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Button } from "@/components/ui/button";
-import { DollarSign } from "lucide-react";
 
 export default function TakeoffHeaderActions({
     isLoading,
+    selectedRows,
+    mappedLineItems,
+    projectId,
 }: {
-    isLoading: boolean
+    isLoading: boolean;
+    selectedRows?: Record<string, boolean>;
+    mappedLineItems?: any[];
+    projectId?: string;
 }) {
     return (
         <>
@@ -20,10 +25,11 @@ export default function TakeoffHeaderActions({
                 ) : (
                     <>
                         <CreateQuoteButton/>
-                        <Button variant="secondary" size="sm">
-                            <DollarSign size={16} />
-                            Demande de prix
-                        </Button>
+                        <PriceRequestButton 
+                            selectedRows={selectedRows || {}}
+                            mappedLineItems={mappedLineItems || []}
+                            projectId={projectId}
+                        />
                         <SettingsButton />
                     </>
                 )

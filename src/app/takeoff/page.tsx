@@ -260,10 +260,14 @@ export default function Takeoff() {
 		<>
         {/* <pre className="text-white">{JSON.stringify(settings, null, 2)}</pre> */}
 			<RenderCounter name="Takeoff" />
+            {/* <pre className="text-white">{JSON.stringify(takeoff, null, 2)}</pre> */}
 			<Header>
 				{!takeoff?.disabled && (
 					<HeaderActions
 						isLoading={isLoading}
+						selectedRows={selectedRows}
+						mappedLineItems={mappedLineItems}
+						projectId={takeoff?.project?.id}
 					/>
 				)}
 			</Header>

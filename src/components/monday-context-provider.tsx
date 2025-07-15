@@ -17,6 +17,7 @@ export function MondayContextProvider({
 	const [context, setContext] = useState<any>();
 	const { setTheme } = useTheme();
 	const { data: settings, isLoading: settingsLoading } = useGetSettings()
+    const debug = false
 
 	// Track re-renders of the context provider
 	useRenderTracker('MondayContextProvider', {
@@ -42,6 +43,11 @@ export function MondayContextProvider({
 
 	return (
 		<MondayContext.Provider value={{ monday, context, settings, settingsLoading }}>
+            {debug && <pre className="w-[320px] rounded-md bg-slate-950 p-4">
+                <code className="text-white w-auto whitespace-pre-wrap">
+                    {JSON.stringify(settings, null, 2)}
+                </code>   
+            </pre>}
 			{children}
 		</MondayContext.Provider>
 	);
