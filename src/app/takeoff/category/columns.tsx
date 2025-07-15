@@ -217,9 +217,7 @@ export const createColumns = ({
     {
         accessorKey: 'name',
         header: 'Nom',
-        size: 300,
-        minSize: 200,
-        maxSize: 500,
+        size: 200,
         cell: ({ row }) => (
             <div className="truncate pr-2" title={row.original.name}>
                 {row.original.name}
@@ -239,9 +237,7 @@ export const createColumns = ({
     {
         accessorKey: 'unit_type',
         header: 'Unité',
-        size: 100,
-        minSize: 80,
-        maxSize: 150,
+        size: 60,
         cell: ({ row }) => (
             <div className="truncate pr-2" title={row.original.unit_type}>
                 {row.original.unit_type}
@@ -250,7 +246,6 @@ export const createColumns = ({
     },
     {
         accessorKey: 'qty_takeoff',
-        // header: 'Quantité',
         size: 60,
         header: () => (
             <div className="text-right w-full border-l-1">
@@ -265,7 +260,7 @@ export const createColumns = ({
     },
     {
         accessorKey: 'cost_takeoff',
-        size: 80,
+        size: 75,
         header: () => (
             <div className="text-right w-full border-l-1">
                 Prix
@@ -279,7 +274,7 @@ export const createColumns = ({
     },
     {
         accessorKey: 'total',
-        size: 100,
+        size: 90,
         header: () => (
             <div className="text-right w-full border-l-1">
                 Total
@@ -294,9 +289,7 @@ export const createColumns = ({
     {
         accessorKey: 'linked_supplier',
         header: 'Fournisseur',
-        size: 200,
-        minSize: 150,
-        maxSize: 300,
+        size: 125,
         cell: ({ row }) => (
             <div className="truncate pr-2">
                 <SupplierName supplierName={row.original.supplierName} />

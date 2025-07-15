@@ -1,3 +1,7 @@
+[ ] Code d'activités
+[ ] Créer soumission
+[ ] Créer 
+
 1. Heavy work happening in every row
 • SupplierName component
 Each visible row mounts its own useSuppliers() hook. Even though React-Query caches the request, the hook still subscribes every row to the query state and executes its own useMemo.

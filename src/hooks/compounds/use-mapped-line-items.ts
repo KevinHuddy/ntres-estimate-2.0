@@ -1,11 +1,23 @@
 import { useMemo } from "react"
 import { useLineItems } from "../queries/use-line-items"
 import { useTemplateLineItems } from "../queries/use-template-line-items"
+import { useRenderTracker } from "../use-render-tracker"
 
 
 export const useMappedLineItems = (takeoffId: string) => {
     const { data: templates, isLoading: templatesLoading } = useTemplateLineItems()
     const { data: lineItems, isLoading: lineItemsLoading } = useLineItems(takeoffId)
+
+    // Track this hook's re-renders
+    useRenderTracker('useMappedLineItems', {
+        takeoffId,
+        templatesLength: templates?.length || 0,
+        lineItemsLength: lineItems?.length || 0,
+        templatesLoading,
+        lineItemsLoading,
+        hasTemplates: !!templates,
+        hasLineItems: !!lineItems
+    });
 
     const mappedItems = useMemo(() => {
         if (!templates || !lineItems || !takeoffId) return []

@@ -43,6 +43,10 @@ export const mondayGraphQLQueries = {
     ${columnValuesFragment}
     query getTakeoffData($takeoffId: [ID!], $lineItemBoardId: ID!, $limit: Int, $columns: [ItemsPageByColumnValuesQuery!])
     {
+        complexity {
+            before
+            query
+        }
         takeoff: items(ids: $takeoffId)
         {
             id
@@ -71,6 +75,10 @@ export const mondayGraphQLQueries = {
     ${columnValuesFragment}
     query listBoardItems($boardId: [ID!], $limit: Int, $columnIds: [String!])
     {
+        complexity {
+            before
+            query
+        }
         boards(ids: $boardId)
         {
             columns(ids: $columnIds) 
@@ -99,6 +107,10 @@ export const mondayGraphQLQueries = {
     listBoardItemsNextPage: `
     ${columnValuesFragment}
     query listBoardItemsNextPage($limit: Int, $cursor: String!, $columnIds: [String!]) {
+        complexity {
+            before
+            query
+        }
         next_items_page(
             limit: $limit,
             cursor: $cursor
@@ -117,6 +129,10 @@ export const mondayGraphQLQueries = {
     listBoards: `
         query listBoards 
         {
+            complexity {
+                before
+                query
+            }
             boards(limit: 1000)
             {
                 id
@@ -126,6 +142,10 @@ export const mondayGraphQLQueries = {
     listBoardColumns: `
         query listBoardColumns($boardId: [ID!], $types: [ColumnType!])
         {
+            complexity {
+                before
+                query
+            }
             boards(ids: $boardId)
             {
                 columns(types: $types) {

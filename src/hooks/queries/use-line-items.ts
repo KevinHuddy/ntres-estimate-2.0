@@ -1,22 +1,34 @@
 "use client"
 
-import { CACHE_TIMES, QUERY_KEYS } from "@/utils/constants"
+import { CACHE_TIMES, QUERY_KEYS, LIMITS } from "@/utils/constants"
 import { useMonday } from "@/components/monday-context-provider"
 import { useQuery, UseQueryResult } from "@tanstack/react-query"
 
 export const useLineItems = (takeoffId: string | undefined, options: any = {}): UseQueryResult<any> => {
     const { settings, monday } = useMonday()
+
+    function getColValue(cols: any, colId: string) {
+        return cols?.find((col) => col?.id === colId)
+    }
     
     return useQuery({
         queryKey: [QUERY_KEYS.LINE_ITEMS, takeoffId],
         queryFn: async () => {
+            
+            let cursor = null
+            const items = []
+            
             const response = await monday.api(`
                 query getLineItems (
                     $lineItemsBoardId: [ID!]
                 ) {
+                    complexity {
+                        before
+                        query
+                    }
                     boards(ids: $lineItemsBoardId) {
                         items_page ( 
-                            limit: 500 
+                            limit: ${LIMITS.LINE_ITEMS},
                             query_params: {
                                 rules: [
                                     {
@@ -49,10 +61,47 @@ export const useLineItems = (takeoffId: string | undefined, options: any = {}): 
                     } 
                 }
             )
-
-            const data = response?.data
             
-            const lineItems = data?.boards?.[0]?.items_page?.items?.map((item) => {
+            const data = response?.data
+            cursor = data?.boards?.[0]?.items_page?.cursor
+            console.log(`🏋️‍♂️ Complexity Use Line Items: ${JSON.stringify(data?.complexity)}`)
+            items.push(...data?.boards?.[0]?.items_page?.items)
+
+            while (cursor) {
+                const response = await monday.api(`
+                    query getNextProducts (
+                        $cursor: String!
+                    ) {
+                        complexity { query }
+                        next_items_page(limit: ${LIMITS.LINE_ITEMS}, cursor: $cursor) {
+                            cursor
+                            items {
+                                id
+                                name
+                                column_values (ids: ${JSON.stringify(Object.values(settings?.COLUMNS?.LINE_ITEMS).flat())}) {
+                                    id
+                                    ... on TextValue { text }
+                                    ... on StatusValue { text }
+                                    ... on DropdownValue { text }
+                                    ... on BoardRelationValue { linked_items { id, name } }
+                                    ... on MirrorValue { display_value }
+                                    ... on NumbersValue { number }
+                                }
+                            }
+                        }
+                    }`, { 
+                        variables: { 
+                            cursor: cursor,
+                        } 
+                    })
+
+                const data = response?.data
+                cursor = data?.next_items_page?.cursor
+                console.log(`🏋️‍♂️ Complexity Use Line Items Next Page: ${JSON.stringify(data?.complexity)}`)
+                items.push(...data?.next_items_page?.items)
+            }
+            
+            const lineItems = items?.map((item) => {
                 const cols = item?.column_values
                 const settingsCols = settings?.COLUMNS?.LINE_ITEMS
 
@@ -88,13 +137,9 @@ export const useLineItems = (takeoffId: string | undefined, options: any = {}): 
 
             return lineItems
         },
-        enabled: !!takeoffId,
+        enabled: !!takeoffId && !!settings,
         staleTime: CACHE_TIMES.NEVER_STALE,
         gcTime: CACHE_TIMES.NEVER_STALE,
         ...options,
     })
-}
-
-function getColValue(cols, colId) {
-    return cols?.find((col) => col?.id === colId)
 }

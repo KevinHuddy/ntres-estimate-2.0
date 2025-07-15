@@ -10,6 +10,8 @@ export const QUERY_KEYS = {
     VARIABLES: 'variables',
     ADMIN_FEES: 'admin-fees',
     SUPPLIERS: 'suppliers',
+    ACTIVITY_CODES: 'activity-codes',
+    PRODUCTS: 'products',
 }
 
 export const CACHE_TIMES = {
@@ -17,4 +19,14 @@ export const CACHE_TIMES = {
     STATIC_DATA: 1000 * 60 * 60 * 24,
     DYNAMIC_DATA: 1000 * 60 * 5,
     CRITICAL_DATA: 0,
+}
+
+export const LIMITS = {
+    TEMPLATE_LINE_ITEMS: 100,
+    LINE_ITEMS: 25,
+    PRODUCTS: 100,
+    ACTIVITY_CODES: 25,
+    ADMIN_FEES: 5,
+    SUPPLIERS: 50,
+    VARIABLES: 10,
 }

@@ -14,6 +14,7 @@ export const useBoards = (options: any = {}): UseQueryResult<any> => {
         queryFn: async () => {
             try {
                 const response = await monday.api(mondayGraphQLQueries.listBoards)
+                console.log(`🏋️‍♂️ Complexity Use Boards: ${JSON.stringify(response?.data?.complexity)}`)
                 const boards = response?.data?.boards.filter(board => !board.name?.includes('Sous-éléments') && !board.name?.includes('Sub-items'))
                 return boards
             } catch (error) {

@@ -22,21 +22,56 @@ import Category from './category';
 
 import { createColumns, DeleteConfirmDialog } from './category/columns';
 import { toast } from 'sonner';
+import { useRenderTracker, RenderCounter } from '@/hooks/use-render-tracker';
 
 // Memoize the Category component to prevent unnecessary re-renders
 const MemoizedCategory = memo(Category);
 
 export default function Takeoff() {
+	// Track re-renders
 	const { context, settings } = useMonday();
 	const itemId = context?.itemId;
+	
+	// Add detailed tracking for each piece of data
+	useRenderTracker('Takeoff-Context', { 
+		hasContext: !!context,
+		itemId: context?.itemId,
+		theme: context?.theme,
+		settingsExists: !!settings,
+		settingsKeys: settings ? Object.keys(settings).join(',') : 'none'
+	});
+
 	const {
 		data: mappedLineItems,
 		isLoading: mappedLineItemsLoading,
 	} = useMappedLineItems(itemId);
+	
+	useRenderTracker('Takeoff-MappedLineItems', {
+		itemId,
+		dataLength: mappedLineItems?.length || 0,
+		isLoading: mappedLineItemsLoading,
+		hasData: !!mappedLineItems
+	});
+
 	const { data: takeoff, isLoading: takeoffLoading } =
 		useTakeoffData(itemId);
+		
+	useRenderTracker('Takeoff-TakeoffData', {
+		itemId,
+		isLoading: takeoffLoading,
+		hasData: !!takeoff,
+		takeoffId: takeoff?.id
+	});
+
 	const { data: adminFees, isLoading: adminFeesLoading } =
 		useAdminFees(itemId);
+		
+	useRenderTracker('Takeoff-AdminFees', {
+		itemId,
+		isLoading: adminFeesLoading,
+		hasData: !!adminFees,
+		feesLength: adminFees?.length || 0
+	});
 
 	// Mutations
 	const createLineItemMutation = useCreateLineItemsMutation();
@@ -223,6 +258,8 @@ export default function Takeoff() {
 
 	return (
 		<>
+        {/* <pre className="text-white">{JSON.stringify(settings, null, 2)}</pre> */}
+			<RenderCounter name="Takeoff" />
 			<Header>
 				{!takeoff?.disabled && (
 					<HeaderActions

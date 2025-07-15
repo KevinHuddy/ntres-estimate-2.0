@@ -1,6 +1,6 @@
 "use client"
 
-import { CACHE_TIMES, QUERY_KEYS } from "@/utils/constants"
+import { CACHE_TIMES, QUERY_KEYS, LIMITS } from "@/utils/constants"
 import { useMonday } from "@/components/monday-context-provider"
 import { useQuery, UseQueryResult } from "@tanstack/react-query"
 
@@ -14,9 +14,13 @@ export const useAdminFees = (takeoffId: string | undefined, options: any = {}): 
                 query getAdminFees (
                     $adminFeesBoardId: [ID!]
                 ) {
+                    complexity {
+                        before
+                        query
+                    }
                     boards(ids: $adminFeesBoardId) {
                         items_page ( 
-                            limit: 500 
+                            limit: ${LIMITS.ADMIN_FEES},
                             query_params: {
                                 rules: [
                                     {
@@ -47,8 +51,34 @@ export const useAdminFees = (takeoffId: string | undefined, options: any = {}): 
             )
 
             const data = response?.data
-            
-            const adminFees = data?.boards?.[0]?.items_page?.items?.map((item) => {
+            console.log(`🏋️‍♂️ Complexity Use Admin Fees: ${JSON.stringify(data?.complexity)}`)
+            let cursor = data?.boards?.[0]?.items_page?.cursor
+            const items = []
+
+            items.push(...data?.boards?.[0]?.items_page?.items)
+
+            while (cursor) {
+                const response = await monday.api(`
+                    query getNextAdminFees (
+                        $cursor: String!
+                    ) {
+                        complexity { before query }
+                        next_items_page(limit: ${LIMITS.ADMIN_FEES}, cursor: $cursor) {
+                            cursor
+                            items {
+                                id
+                            }
+                        }
+                    }
+                `, { variables: { cursor } })
+
+                const data = response?.data
+                cursor = data?.next_items_page?.cursor
+                console.log(`🏋️‍♂️ Complexity Use Admin Fees Next Page: ${JSON.stringify(data?.complexity)}`)
+                items.push(...data?.next_items_page?.items)
+            }
+
+            const adminFees = items?.map((item) => {
                 const cols = item?.column_values
                 const settingsCols = settings?.COLUMNS?.ADMIN_FEES
 

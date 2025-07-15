@@ -20,6 +20,7 @@ import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useSuppliers } from '@/hooks/queries/use-suppliers';
+import { useActivityCodes } from '@/hooks/queries/use-activity-codes';
 import { useTemplateLineItems } from '@/hooks/queries/use-template-line-items';
 import { useVariables } from '@/hooks/queries/use-variables';
 import { useMonday } from '@/components/monday-context-provider';
@@ -51,18 +52,6 @@ const schema = z.object({
 	mo_days: z.coerce.number().min(1, 'Les jours doivent être positifs').optional(),
 	// Activity code field
 	activity_code: z.string().optional(),
-}).refine((data) => {
-	// For Main-d'oeuvre category, mo_hours is required
-	if (data.category === "Main-d'oeuvre") {
-		return data.mo_hours && data.mo_hours > 0;
-	}
-	// For other categories, type, unit_type, and supplier are required
-	return data.type && data.type.length > 0 && 
-		   data.unit_type && data.unit_type.length > 0 && 
-		   data.supplier && data.supplier.length > 0;
-}, {
-	message: "Tous les champs requis doivent être remplis",
-	path: ["category"] // This will show the error at the category level
 });
 
 type FormData = z.infer<typeof schema>;
@@ -73,6 +62,7 @@ export default function EditModal({ open, onOpenChange, item }: EditModalProps) 
 
 	// Fetch data for dropdowns
 	const { data: suppliers } = useSuppliers();
+	const { data: activityCodes } = useActivityCodes();
 	const { data: templateLineItems } = useTemplateLineItems();
 	const { data: variables } = useVariables(context?.itemId);
 
@@ -235,6 +225,7 @@ export default function EditModal({ open, onOpenChange, item }: EditModalProps) 
 			[cols.QTY_TAKEOFF]: data.qty_takeoff.toString(),
 			[cols.COST_TAKEOFF]: data.cost_takeoff.toString(),
 			[cols.LINKED_TEMPLATE_LINE_ITEM]: item?.linked_template_line_item || '',
+            [cols.TYPE]: data.type,
 		};
 
 		// Add conditional fields based on category
@@ -245,10 +236,9 @@ export default function EditModal({ open, onOpenChange, item }: EditModalProps) 
 			if (data.mo_days !== undefined) columns[cols.MO_DAYS] = data.mo_days.toString();
 		} else {
 			// For other categories, add standard fields
-			if (data.type) columns[cols.TYPE] = data.type;
 			if (data.unit_type) columns[cols.UNIT_TYPE] = data.unit_type;
 			if (data.supplier) columns[cols.LINKED_SUPPLIER] = data.supplier;
-			if (data.variables?.length) columns[cols.VALUES] = data.variables.join(',');
+			if (data.variables?.length) columns[cols.VALUES] = data.variables;
 			if (data.waste !== undefined) columns[cols.WASTE] = data.waste.toString();
 			if (data.multiplier !== undefined) columns[cols.MULTIPLIER] = data.multiplier.toString();
 			if (data.divider !== undefined) columns[cols.DIVIDER] = data.divider.toString();
@@ -304,9 +294,13 @@ export default function EditModal({ open, onOpenChange, item }: EditModalProps) 
 						<DialogTitle>Modifier l&apos;élément</DialogTitle>
 					</DialogHeader>
 
+                    <pre className="text-xs text-muted-foreground">
+                        {JSON.stringify(settings, null, 2)}
+                    </pre>
+
 					<Form {...form}>
 						<form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-							<div className="grid grid-cols-6 gap-4">
+							<div className="grid grid-cols-6 gap-6">
 								<div className="col-span-3">
 									{/* Name */}
 									<FormField
@@ -450,7 +444,7 @@ export default function EditModal({ open, onOpenChange, item }: EditModalProps) 
 														</SelectTrigger>
 													</FormControl>
 													<SelectContent>
-														{dropdownOptions.activityCodes.map((activityCode: any) => (
+														{activityCodes?.map((activityCode: any) => (
 															<SelectItem key={activityCode.id} value={activityCode.id}>
 																{activityCode.name}
 															</SelectItem>
@@ -462,11 +456,10 @@ export default function EditModal({ open, onOpenChange, item }: EditModalProps) 
 										)}
 									/>
 								</div>
-							</div>
 
 							{/* Conditional inputs based on type */}
 							{watchedValues.category === "Main-d'oeuvre" ? (
-								<div className="grid grid-cols-3 gap-4">
+								<div className="grid grid-cols-3 gap-4 col-span-6">
 									<div>
 										{/* MO Quantity - Hommes */}
 										<FormField
@@ -543,8 +536,7 @@ export default function EditModal({ open, onOpenChange, item }: EditModalProps) 
 									</div>
 								</div>
 							) : (
-								<div className="grid grid-cols-2 gap-4">
-									<div>
+								<div className="col-span-3">
 										{/* Quantity */}
 										<FormField
 											control={form.control}
@@ -555,7 +547,7 @@ export default function EditModal({ open, onOpenChange, item }: EditModalProps) 
 														Quantité
 														{isQuantityDisabled && (
 															<span className="text-xs text-muted-foreground ml-2">
-																(Calculée automatiquement)
+																(Variables)
 															</span>
 														)}
 													</FormLabel>
@@ -571,7 +563,7 @@ export default function EditModal({ open, onOpenChange, item }: EditModalProps) 
 															}
 														/>
 													</FormControl>
-													{isQuantityDisabled && calculatedQuantity !== null && (
+													{/* {isQuantityDisabled && calculatedQuantity !== null && (
 														<div className="text-xs text-muted-foreground mt-1">
 															{watchedValues.category === "Main-d'oeuvre"
 																? `Calculé: ${watchedValues.mo_qty || 1} × ${
@@ -583,16 +575,15 @@ export default function EditModal({ open, onOpenChange, item }: EditModalProps) 
 																		watchedValues.divider || 1
 																  } = ${calculatedQuantity.toFixed(2)}`}
 														</div>
-													)}
+													)} */}
 													<FormMessage />
 												</FormItem>
 											)}
 										/>
 									</div>
-								</div>
 							)}
 
-							<div className="grid grid-cols-2 gap-4">
+							<div className="col-span-3">
 								{/* Cost */}
 								<FormField
 									control={form.control}
@@ -619,6 +610,7 @@ export default function EditModal({ open, onOpenChange, item }: EditModalProps) 
 							{/* Variables - Hidden for Main-d'oeuvre */}
 							{watchedValues.category !== "Main-d'oeuvre" && (
 								<>
+								<div className="col-span-6 border-t pt-6 mt-2">
 								<FormField
 									control={form.control}
 									name="variables"
@@ -701,8 +693,8 @@ export default function EditModal({ open, onOpenChange, item }: EditModalProps) 
 										
 									)}
 								/>
-								<div className="grid grid-cols-3 gap-4">
-								<div>
+								</div>
+								<div className="col-span-2">
 									{/* Waste */}
 									<FormField
 										control={form.control}
@@ -725,7 +717,7 @@ export default function EditModal({ open, onOpenChange, item }: EditModalProps) 
 										)}
 									/>
 								</div>
-								<div>
+								<div className="col-span-2">
 									{/* Multiplier */}
 									<FormField
 										control={form.control}
@@ -748,7 +740,7 @@ export default function EditModal({ open, onOpenChange, item }: EditModalProps) 
 										)}
 									/>
 								</div>
-								<div>
+								<div className="col-span-2">
 									{/* Divider */}
 									<FormField
 										control={form.control}
@@ -771,10 +763,10 @@ export default function EditModal({ open, onOpenChange, item }: EditModalProps) 
 										)}
 									/>
 								</div>
-							</div>
 							</>
 								
 							)}
+							</div>
 
 							<div className="flex justify-end space-x-2 pt-4">
 								<Button type="button" variant="outline" onClick={handleClose} disabled={isLoading}>

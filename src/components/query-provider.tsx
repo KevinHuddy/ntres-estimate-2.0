@@ -11,7 +11,7 @@ const QueryProvider = ({ children }: { children: React.ReactNode }) => {
                     queries: {
                         staleTime: 1000 * 60 * 5,
                         gcTime: 1000 * 60 * 30,
-                        retry: 3,
+                        retry: 2,
                     },
                     mutations: {
                         retry: 1,

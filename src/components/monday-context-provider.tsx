@@ -4,6 +4,7 @@ import { createContext, useContext, useEffect, useState } from 'react';
 import mondaySdk, { MondayClientSdk } from 'monday-sdk-js';
 import { useTheme } from 'next-themes';
 import { useGetSettings } from '@/hooks/queries/use-settings';
+import { useRenderTracker } from '@/hooks/use-render-tracker';
 
 export const MondayContext = createContext<any>(null);
 const monday: MondayClientSdk = mondaySdk();
@@ -17,15 +18,27 @@ export function MondayContextProvider({
 	const { setTheme } = useTheme();
 	const { data: settings, isLoading: settingsLoading } = useGetSettings()
 
+	// Track re-renders of the context provider
+	useRenderTracker('MondayContextProvider', {
+		hasContext: !!context,
+		contextItemId: context?.itemId,
+		contextTheme: context?.theme,
+		hasSettings: !!settings,
+		settingsLoading,
+		settingsKeys: settings ? Object.keys(settings).length : 0
+	});
+
 	useEffect(() => {
 		monday.listen('context', (res) => {
 			setContext(res.data);
 		});
-	});
+	}, []);
 
 	useEffect(() => {
-		setTheme(context?.theme.toString());
-	}, [context, setTheme]);
+		if (context?.theme) {
+			setTheme(context.theme.toString());
+		}
+	}, [context?.theme, setTheme]); // Only depend on theme, not entire context
 
 	return (
 		<MondayContext.Provider value={{ monday, context, settings, settingsLoading }}>

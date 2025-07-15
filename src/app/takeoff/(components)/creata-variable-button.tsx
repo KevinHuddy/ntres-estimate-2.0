@@ -95,7 +95,7 @@ export default function CreateVariableButton() {
                                         <FormControl>
                                         <Input {...field} onChange={(e) => {
                                             field.onChange(e.target.value)
-                                        }} type="text" />
+                                        }} type="text" placeholder="Ex: Surface"/>
                                         </FormControl>
                                         <FormMessage />
                                     </FormItem>
@@ -110,7 +110,7 @@ export default function CreateVariableButton() {
                                         <FormControl>
                                         <Input {...field} onChange={(e) => {
                                             field.onChange(e.target.value)
-                                        }} type="number" />
+                                        }} type="number" placeholder="0" />
                                         </FormControl>
                                         <FormMessage />
                                     </FormItem>
@@ -125,7 +125,7 @@ export default function CreateVariableButton() {
                                         <FormControl>
                                         <Input {...field} onChange={(e) => {
                                             field.onChange(e.target.value)
-                                        }} type="text" />
+                                        }} type="text" placeholder="Ex: m²" />
                                         </FormControl>
                                         <FormMessage />
                                     </FormItem>

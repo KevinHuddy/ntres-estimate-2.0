@@ -16,6 +16,10 @@ export const useTakeoffData = (takeoffId: string | undefined): UseQueryResult<an
                     $templateLineItemsBoardId: [ID!], 
                     $lineItemsBoardId: [ID!], 
                 ) {
+                    complexity {
+                        before
+                        query
+                    }
                     takeoff: items(ids: $takeoffId) {
                         id
                         name
@@ -70,6 +74,7 @@ export const useTakeoffData = (takeoffId: string | undefined): UseQueryResult<an
             )
 
             const data = response?.data
+            console.log(`🏋️‍♂️ Complexity Use Takeoff Data: ${JSON.stringify(data?.complexity)}`)
             const takeoff = data?.takeoff?.[0]
             const takeoffCols = takeoff?.column_values
             

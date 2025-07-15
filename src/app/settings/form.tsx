@@ -8,7 +8,6 @@ import { z } from 'zod';
 import { Button } from '@/components/ui/button';
 import {
 	Form,
-	FormDescription,
 	FormField,
 	FormItem,
 	FormLabel,
@@ -25,19 +24,25 @@ import { useMonday } from '@/components/monday-context-provider';
 import { MondayBoardCombobox } from './fields';
 import { QUERY_KEYS } from '@/utils/constants';
 import { useQueryClient } from '@tanstack/react-query';
+import { Input } from '@/components/ui/input';
+import { Separator } from '@/components/ui/separator';
 
 
 const formSchema = z.object({
-	TAKEOFF: z.string(),
-	LINE_ITEMS: z.string(),
-	TEMPLATE_LINE_ITEMS: z.string(),
-	ADMIN_FEES: z.string(),
-	VARIABLES: z.string(),
-	QUOTES: z.string(),
-	CONTRACTS: z.string(),
-	SUPPLIERS: z.string(),
-	PRODUCTS: z.string(),
-	ACTIVITY_CODES: z.string(),
+	BOARD_TAKEOFF: z.string(),
+    BOARD_LINE_ITEMS: z.string(),
+    BOARD_TEMPLATE_LINE_ITEMS: z.string(),
+    BOARD_ADMIN_FEES: z.string(),
+    BOARD_VARIABLES: z.string(),
+    BOARD_QUOTES: z.string(),
+    BOARD_CONTRACTS: z.string(),
+    BOARD_SUPPLIERS: z.string(),
+    BOARD_PRODUCTS: z.string(),
+    BOARD_ACTIVITY_CODES: z.string(),
+    BOARD_TOOLS: z.string(),
+
+    CATEGORY_TOOLS: z.string(),
+    CATEGORY_MO: z.string(),
 });
 
 export default function SettingsForm({ initialConfig, debug = false }: { initialConfig: any, debug?: boolean }) {
@@ -45,11 +50,30 @@ export default function SettingsForm({ initialConfig, debug = false }: { initial
 	const { monday } = useMonday();
 	const queryClient = useQueryClient();
 
-	const defaultValues = useMemo(() => initialConfig?.BOARDS || {}, [initialConfig])
+	const defaultValues = useMemo(() => {
+        return {
+            CATEGORY_TOOLS: initialConfig?.CATEGORIES?.TOOLS || "",
+            CATEGORY_MO: initialConfig?.CATEGORIES?.MO || "",
+        }
+    }, [initialConfig])
 	
 	const form = useForm<z.infer<typeof formSchema>>({
 		resolver: zodResolver(formSchema),
-		defaultValues: defaultValues
+		defaultValues: {
+            BOARD_TAKEOFF: initialConfig?.BOARDS?.TAKEOFF || "",
+            BOARD_LINE_ITEMS: initialConfig?.BOARDS?.LINE_ITEMS || "",
+            BOARD_TEMPLATE_LINE_ITEMS: initialConfig?.BOARDS?.TEMPLATE_LINE_ITEMS || "",
+            BOARD_ADMIN_FEES: initialConfig?.BOARDS?.ADMIN_FEES || "",
+            BOARD_VARIABLES: initialConfig?.BOARDS?.VARIABLES || "",
+            BOARD_QUOTES: initialConfig?.BOARDS?.QUOTES || "",
+            BOARD_CONTRACTS: initialConfig?.BOARDS?.CONTRACTS || "",
+            BOARD_SUPPLIERS: initialConfig?.BOARDS?.SUPPLIERS || "",
+            BOARD_PRODUCTS: initialConfig?.BOARDS?.PRODUCTS || "",
+            BOARD_ACTIVITY_CODES: initialConfig?.BOARDS?.ACTIVITY_CODES || "",
+            BOARD_TOOLS: initialConfig?.BOARDS?.TOOLS || "",
+            CATEGORY_TOOLS: initialConfig?.CATEGORIES?.TOOLS || "",
+            CATEGORY_MO: initialConfig?.CATEGORIES?.MO || "",
+        }
 	});
 
 	useEffect(() => {
@@ -60,18 +84,19 @@ export default function SettingsForm({ initialConfig, debug = false }: { initial
 		try {
 			// Group the fields under BOARDS
 			const config = {
-				BOARDS: {
-					TAKEOFF: values.TAKEOFF,
-					LINE_ITEMS: values.LINE_ITEMS,
-					TEMPLATE_LINE_ITEMS: values.TEMPLATE_LINE_ITEMS,
-					ADMIN_FEES: values.ADMIN_FEES,
-					VARIABLES: values.VARIABLES,
-					QUOTES: values.QUOTES,
-					CONTRACTS: values.CONTRACTS,
-					SUPPLIERS: values.SUPPLIERS,
-					PRODUCTS: values.PRODUCTS,
-					ACTIVITY_CODES: values.ACTIVITY_CODES,
-				}
+                BOARD_TAKEOFF: values.BOARD_TAKEOFF || "",
+                BOARD_LINE_ITEMS: values.BOARD_LINE_ITEMS || "",
+                BOARD_TEMPLATE_LINE_ITEMS: values.BOARD_TEMPLATE_LINE_ITEMS || "",
+                BOARD_ADMIN_FEES: values.BOARD_ADMIN_FEES || "",
+                BOARD_VARIABLES: values.BOARD_VARIABLES || "",
+                BOARD_QUOTES: values.BOARD_QUOTES || "",
+                BOARD_CONTRACTS: values.BOARD_CONTRACTS || "",
+                BOARD_SUPPLIERS: values.BOARD_SUPPLIERS || "",
+                BOARD_PRODUCTS: values.BOARD_PRODUCTS || "",
+                BOARD_ACTIVITY_CODES: values.BOARD_ACTIVITY_CODES || "",
+                BOARD_TOOLS: values.BOARD_TOOLS || "",
+                CATEGORY_TOOLS: values.CATEGORY_TOOLS || "",
+                CATEGORY_MO: values.CATEGORY_MO || "",
 			};
 
 			await monday.storage.setItem('config', JSON.stringify(config));
@@ -104,10 +129,10 @@ export default function SettingsForm({ initialConfig, debug = false }: { initial
 					<CardHeader>
 						<CardTitle>Tableaux</CardTitle>
 					</CardHeader>
-					<CardContent className="space-y-8">
+					<CardContent className="grid grid-cols-2 gap-y-4 gap-x-6">
 						<FormField
 							control={form.control}
-							name="TAKEOFF"
+							name="BOARD_TAKEOFF"
 							render={({ field }) => (
 								<FormItem className="flex flex-col">
 									<FormLabel>
@@ -125,7 +150,7 @@ export default function SettingsForm({ initialConfig, debug = false }: { initial
 						/>
 						<FormField
 							control={form.control}
-							name="LINE_ITEMS"
+							name="BOARD_LINE_ITEMS"
 							render={({ field }) => (
 								<FormItem className="flex flex-col">
 									<FormLabel>Éléments</FormLabel>
@@ -139,7 +164,7 @@ export default function SettingsForm({ initialConfig, debug = false }: { initial
 						/>
 						<FormField
 							control={form.control}
-							name="TEMPLATE_LINE_ITEMS"
+							name="BOARD_TEMPLATE_LINE_ITEMS"
 							render={({ field }) => (
 								<FormItem className="flex flex-col">
 									<FormLabel>
@@ -149,17 +174,13 @@ export default function SettingsForm({ initialConfig, debug = false }: { initial
 										onSelect={field.onChange}
 										value={field.value}
 									/>
-									<FormDescription>
-										Le tableau ou le templates du
-										takeoff est sauvegardé
-									</FormDescription>
 									<FormMessage />
 								</FormItem>
 							)}
 						/>
 						<FormField
 							control={form.control}
-							name="ADMIN_FEES"
+							name="BOARD_ADMIN_FEES"
 							render={({ field }) => (
 								<FormItem className="flex flex-col">
 									<FormLabel>
@@ -175,7 +196,7 @@ export default function SettingsForm({ initialConfig, debug = false }: { initial
 						/>
 						<FormField
 							control={form.control}
-							name="VARIABLES"
+							name="BOARD_VARIABLES"
 							render={({ field }) => (
 								<FormItem className="flex flex-col">
 									<FormLabel>
@@ -191,7 +212,7 @@ export default function SettingsForm({ initialConfig, debug = false }: { initial
 						/>
 						<FormField
 							control={form.control}
-							name="QUOTES"
+							name="BOARD_QUOTES"
 							render={({ field }) => (
 								<FormItem className="flex flex-col">
 									<FormLabel>
@@ -207,7 +228,7 @@ export default function SettingsForm({ initialConfig, debug = false }: { initial
 						/>
 						<FormField
 							control={form.control}
-							name="CONTRACTS"
+							name="BOARD_CONTRACTS"
 							render={({ field }) => (
 								<FormItem className="flex flex-col">
 									<FormLabel>
@@ -223,7 +244,7 @@ export default function SettingsForm({ initialConfig, debug = false }: { initial
 						/>
 						<FormField
 							control={form.control}
-							name="SUPPLIERS"
+							name="BOARD_SUPPLIERS"
 							render={({ field }) => (
 								<FormItem className="flex flex-col">
 									<FormLabel>
@@ -239,7 +260,7 @@ export default function SettingsForm({ initialConfig, debug = false }: { initial
 						/>
 						<FormField
 							control={form.control}
-							name="PRODUCTS"
+							name="BOARD_PRODUCTS"
 							render={({ field }) => (
 								<FormItem className="flex flex-col">
 									<FormLabel>
@@ -255,7 +276,7 @@ export default function SettingsForm({ initialConfig, debug = false }: { initial
 						/>
 						<FormField
 							control={form.control}
-							name="ACTIVITY_CODES"
+							name="BOARD_ACTIVITY_CODES"
 							render={({ field }) => (
 								<FormItem className="flex flex-col">
 									<FormLabel>
@@ -263,6 +284,57 @@ export default function SettingsForm({ initialConfig, debug = false }: { initial
 									</FormLabel>
 									<MondayBoardCombobox
 										onSelect={field.onChange}
+										value={field.value}
+									/>
+									<FormMessage />
+								</FormItem>
+							)}
+						/>
+						<FormField
+							control={form.control}
+							name="BOARD_TOOLS"
+							render={({ field }) => (
+								<FormItem className="flex flex-col">
+									<FormLabel>
+										Équipements & Outils
+									</FormLabel>
+									<MondayBoardCombobox
+										onSelect={field.onChange}
+										value={field.value}
+									/>
+									<FormMessage />
+								</FormItem>
+							)}
+						/>
+
+                        <Separator className="col-span-2" />
+
+                        <FormField
+							control={form.control}
+							name="CATEGORY_TOOLS"
+							render={({ field }) => (
+								<FormItem className="flex flex-col">
+									<FormLabel>
+										Catégorie Équipements & Outils
+									</FormLabel>
+									<Input
+										onChange={field.onChange}
+										value={field.value}
+									/>
+									<FormMessage />
+								</FormItem>
+							)}
+						/>
+                        <FormField
+							control={form.control}
+							name="CATEGORY_MO"
+							render={({ field }) => (
+								<FormItem className="flex flex-col">
+									<FormLabel>
+										Catégorie Main d&apos;oeuvre
+									</FormLabel>
+									<Input
+										onChange={field.onChange}
 										value={field.value}
 									/>
 									<FormMessage />

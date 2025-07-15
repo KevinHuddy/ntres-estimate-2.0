@@ -26,12 +26,18 @@ const query = `
         $templateLineItemsBoardId: [ID!]
         $variablesBoardId: [ID!]
         $adminFeesBoardId: [ID!]
+        $productsBoardId: [ID!]
     ) {
+        complexity {
+            before
+            query
+        }
         takeoff: boards(ids: $takeoffBoardId) { ...ColumnsFragment }
         lineItems: boards(ids: $lineItemsBoardId) { ...ColumnsFragment }
         templateLineItems: boards(ids: $templateLineItemsBoardId) { ...ColumnsFragment }
         variables: boards(ids: $variablesBoardId) { ...ColumnsFragment }
         adminFees: boards(ids: $adminFeesBoardId) { ...ColumnsFragment }
+        products: boards(ids: $productsBoardId) { ...ColumnsFragment }
     }`
 
 
@@ -48,13 +54,15 @@ const COLUMNS = ({
     templateLineItemsCols,
     lineItemsCols,
     variablesCols,
-    adminFeesCols
+    adminFeesCols,
+    productsCols
 }: {
     takeoffCols: any,
     templateLineItemsCols: any,
     lineItemsCols: any,
     variablesCols: any,
     adminFeesCols: any,
+    productsCols: any,
 }) => {
     return {
         TAKEOFF: {
@@ -64,6 +72,13 @@ const COLUMNS = ({
             LINKED_PRICE_REQUEST: getColId(takeoffCols, "{{{ntr.takeoff.linked_price_request}}}"),
             LINKED_QUOTE: getColId(takeoffCols, "{{{ntr.takeoff.linked_quote}}}"),
             FEE: getColIds(takeoffCols, "{{{ntr.takeoff.fee}}}"),
+        },
+        PRODUCTS: {
+            CATEGORY: getColId(productsCols, "{{{category}}}"),
+            TYPE: getColId(productsCols, "{{{type}}}"),
+            LINKED_SUPPLIER: getColId(productsCols, "{{{linked_supplier}}}"),
+            UNIT_TYPE: getColId(productsCols, "{{{unit}}}"),
+            COST: getColId(productsCols, "{{{ppv1}}}"),
         },
         TEMPLATE_LINE_ITEMS: {
             CATEGORY: getColId(templateLineItemsCols, "{{{ntr.estimate.category}}}"),
@@ -129,32 +144,50 @@ export const useGetSettings = (options: any = {}): UseQueryResult<any> => {
         queryFn: async () : Promise<any> => {
             try {
                 const settings = await monday.storage.getItem('config')
-                const mainSettings = JSON.parse(settings?.data?.value)
+                const mainSettings = JSON.parse(settings?.data?.value || '{}')
                 const columnSettings = await monday.api(
                     query, { variables: {
-                        lineItemsBoardId: mainSettings?.BOARDS?.LINE_ITEMS,
-                        templateLineItemsBoardId: mainSettings?.BOARDS?.TEMPLATE_LINE_ITEMS,
-                        takeoffBoardId: mainSettings?.BOARDS?.TAKEOFF,
-                        variablesBoardId: mainSettings?.BOARDS?.VARIABLES,
-                        adminFeesBoardId: mainSettings?.BOARDS?.ADMIN_FEES
+                        lineItemsBoardId: mainSettings?.BOARD_LINE_ITEMS,
+                        templateLineItemsBoardId: mainSettings?.BOARD_TEMPLATE_LINE_ITEMS,
+                        takeoffBoardId: mainSettings?.BOARD_TAKEOFF,
+                        variablesBoardId: mainSettings?.BOARD_VARIABLES,
+                        adminFeesBoardId: mainSettings?.BOARD_ADMIN_FEES,
+                        productsBoardId: mainSettings?.BOARD_PRODUCTS
                     }
                 })
+
+                console.log(`🏋️‍♂️ Complexity Use Settings: ${JSON.stringify(columnSettings?.data?.complexity)}`)
 
                 const columns = COLUMNS({
                     takeoffCols: columnSettings?.data?.takeoff?.[0]?.columns,
                     templateLineItemsCols: columnSettings?.data?.templateLineItems?.[0]?.columns,
                     lineItemsCols: columnSettings?.data?.lineItems?.[0]?.columns,
                     variablesCols: columnSettings?.data?.variables?.[0]?.columns,
-                    adminFeesCols: columnSettings?.data?.adminFees?.[0]?.columns
+                    adminFeesCols: columnSettings?.data?.adminFees?.[0]?.columns,
+                    productsCols: columnSettings?.data?.products?.[0]?.columns
                 })
 
                 return {
-                    ...mainSettings,
+                    BOARDS: {
+                        TAKEOFF: mainSettings?.BOARD_TAKEOFF,
+                        LINE_ITEMS: mainSettings?.BOARD_LINE_ITEMS,
+                        TEMPLATE_LINE_ITEMS: mainSettings?.BOARD_TEMPLATE_LINE_ITEMS,
+                        ADMIN_FEES: mainSettings?.BOARD_ADMIN_FEES,
+                        VARIABLES: mainSettings?.BOARD_VARIABLES,
+                        QUOTES: mainSettings?.BOARD_QUOTES,
+                        CONTRACTS: mainSettings?.BOARD_CONTRACTS,
+                        SUPPLIERS: mainSettings?.BOARD_SUPPLIERS,
+                        PRODUCTS: mainSettings?.BOARD_PRODUCTS,
+                        ACTIVITY_CODES: mainSettings?.BOARD_ACTIVITY_CODES,
+                        TOOLS: mainSettings?.BOARD_TOOLS,
+                    },
+                    CATEGORIES: {
+                        TOOLS: mainSettings?.CATEGORY_TOOLS,
+                        MO: mainSettings?.CATEGORY_MO,
+                    },
                     COLUMNS: {
                         ...columns
-                    }
-                    // lineItems: columnSettings?.data?.lineItems?.[0],
-                    // takeoff: columnSettings?.data?.takeoff?.[0]
+                    },
                 }
             } catch (error) {
                 console.error('Error fetching settings', error)

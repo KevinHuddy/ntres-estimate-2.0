@@ -17,6 +17,7 @@ import {
 	PopoverContent,
 	PopoverTrigger,
 } from '@/components/ui/popover';
+import { useProducts } from '@/hooks/queries/use-products';
 
 // Virtualized command item component
 const VirtualizedCommandItem = ({ index, style, data }: any) => {
@@ -43,28 +44,41 @@ const VirtualizedCommandItem = ({ index, style, data }: any) => {
 	);
 };
 
-export const SearchSelectCombobox = React.memo(
+interface ProductSelectProps {
+	placeholder?: string;
+	onSelect: (product: any) => void;
+	value?: string | number;
+	searchPlaceholder?: string;
+	className?: string;
+}
+
+export const ProductSelect = React.memo(
 	({
-		options,
-		placeholder,
+		placeholder = "Sélectionner un produit",
 		onSelect,
 		value,
-		isLoading,
-		searchPlaceholder,
-	}: {
-		options: { value: string; label: string }[];
-		placeholder: string;
-		onSelect: (value: string) => void;
-		value: string | number;
-		isLoading: boolean;
-		searchPlaceholder: string;
-	}) => {
+		searchPlaceholder = "Rechercher un produit...",
+		className,
+	}: ProductSelectProps) => {
 		const [open, setOpen] = useState(false);
 		const [searchTerm, setSearchTerm] = useState('');
 
+		// Fetch products
+		const { data: products, isLoading } = useProducts();
+
+		// Convert products to options format
+		const options = useMemo(() => {
+			if (!products) return [];
+			return products.map((product: any) => ({
+				value: product.id,
+				label: product.name,
+				product: product // Keep full product data for onSelect
+			}));
+		}, [products]);
+
 		const handleSelect = useCallback(
-			(option: { value: string }) => {
-				onSelect(option.value);
+			(option: { value: string; product: any }) => {
+				onSelect(option.product);
 				setOpen(false);
 				setSearchTerm('');
 			},
@@ -98,12 +112,12 @@ export const SearchSelectCombobox = React.memo(
 			return (
 				<Button
 					variant="outline"
-					className="w-full justify-between bg-transparent"
+					className={cn("w-full justify-between bg-transparent", className)}
 					disabled
 				>
 					<div className="flex items-center">
 						<Loader2 className="w-4 h-4 mr-2 animate-spin" />
-						Loading...
+						Chargement des produits...
 					</div>
 					<ChevronDown
 						className={`w-4 h-4 opacity-50 transition-transform`}
@@ -119,15 +133,13 @@ export const SearchSelectCombobox = React.memo(
 						variant="outline"
 						role="combobox"
 						aria-expanded={open}
-						className="w-full justify-between"
+						className={cn("w-full justify-between", className)}
 					>
-                        <div className="flex flex-row items-center gap-2 truncate w-full">
-							{selectedOption?.label || placeholder}
-                        </div>
+						{selectedOption?.label || placeholder}
 						<ChevronsUpDown className="opacity-50" />
 					</Button>
 				</PopoverTrigger>
-				<PopoverContent className="w-full p-0">
+				<PopoverContent className="w-full p-0" align="start">
 					<Command shouldFilter={false}>
 						<CommandInput
 							placeholder={searchPlaceholder}
@@ -152,7 +164,7 @@ export const SearchSelectCombobox = React.memo(
 								</List>
 							) : (
 								<CommandEmpty>
-									Aucun résultat.
+									Aucun produit trouvé.
 								</CommandEmpty>
 							)}
 						</div>
@@ -163,4 +175,4 @@ export const SearchSelectCombobox = React.memo(
 	}
 );
 
-SearchSelectCombobox.displayName = 'SearchSelectCombobox';
+ProductSelect.displayName = 'ProductSelect'; 

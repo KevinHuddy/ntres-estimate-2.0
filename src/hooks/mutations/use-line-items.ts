@@ -57,12 +57,12 @@ export const useCreateLineItemsMutation = () => {
                 id: tempId, // Temporary ID to distinguish it
                 name,
                 category: columns[cols.CATEGORY] || '',
-                type: columns[cols.TYPE] || '',
+                type: columns[cols.TYPE]?.toString() || '',
                 unit_type: columns[cols.UNIT_TYPE] || '',
                 qty_takeoff: Number(columns[cols.QTY_TAKEOFF]) || 0,
                 cost_takeoff: Number(columns[cols.COST_TAKEOFF]) || 0,
                 linked_supplier: columns[cols.LINKED_SUPPLIER] || '',
-                values: columns[cols.VALUES] ? columns[cols.VALUES].split(',') : [],
+                values: columns[cols.VALUES] ? columns[cols.VALUES] : [],
                 waste: Number(columns[cols.WASTE]) || 0,
                 multiplier: Number(columns[cols.MULTIPLIER]) || 0,
                 divider: Number(columns[cols.DIVIDER]) || 0,
@@ -76,6 +76,8 @@ export const useCreateLineItemsMutation = () => {
                 // Mark as optimistic to handle UI states
                 _isOptimistic: true,
             }
+
+            console.log({optimisticItem})
             
             // Optimistically update the cache
             queryClient.setQueryData([QUERY_KEYS.LINE_ITEMS, takeoffId], (old: any[]) => {
@@ -105,12 +107,6 @@ export const useCreateLineItemsMutation = () => {
                 })
             }
         },
-        onSettled: (_, __, { takeoffId }) => {
-            // Remove the setTimeout delay to prevent timing issues
-            queryClient.invalidateQueries({
-                queryKey: [QUERY_KEYS.LINE_ITEMS, takeoffId]
-            })
-        }
     })
 }
 
@@ -168,7 +164,7 @@ export const useUpdateLineItemsMutation = () => {
                             qty_takeoff: columns[cols.QTY_TAKEOFF] ? Number(columns[cols.QTY_TAKEOFF]) : item.qty_takeoff,
                             cost_takeoff: columns[cols.COST_TAKEOFF] ? Number(columns[cols.COST_TAKEOFF]) : item.cost_takeoff,
                             linked_supplier: columns[cols.LINKED_SUPPLIER] || item.linked_supplier,
-                            values: columns[cols.VALUES] ? columns[cols.VALUES].split(',') : item.values,
+                            values: columns[cols.VALUES] ? columns[cols.VALUES] : item.values,
                             waste: columns[cols.WASTE] ? Number(columns[cols.WASTE]) : item.waste,
                             multiplier: columns[cols.MULTIPLIER] ? Number(columns[cols.MULTIPLIER]) : item.multiplier,
                             divider: columns[cols.DIVIDER] ? Number(columns[cols.DIVIDER]) : item.divider,
@@ -203,12 +199,12 @@ export const useUpdateLineItemsMutation = () => {
                 }))
             })
         },
-        onSettled: (_, __, { takeoffId }) => {
-            // Remove the setTimeout delay to prevent timing issues
-            queryClient.invalidateQueries({
-                queryKey: [QUERY_KEYS.LINE_ITEMS, takeoffId]
-            })
-        }
+        // onSettled: (_, __, { takeoffId }) => {
+        //     // Disabled aggressive invalidation to prevent re-render loops
+        //     queryClient.invalidateQueries({
+        //         queryKey: [QUERY_KEYS.LINE_ITEMS, takeoffId]
+        //     })
+        // }
     })
 }
 
@@ -257,11 +253,11 @@ export const useDeleteLineItemMutation = () => {
             }
             toast.error("Erreur lors de la suppression de l'élément")
         },
-        onSettled: (_, __, { takeoffId }) => {
-            // Remove the setTimeout delay to prevent timing issues
-            queryClient.invalidateQueries({
-                queryKey: [QUERY_KEYS.LINE_ITEMS, takeoffId]
-            })
-        }
+        // onSettled: (_, __, { takeoffId }) => {
+        //     // Disabled aggressive invalidation to prevent re-render loops
+        //     queryClient.invalidateQueries({
+        //         queryKey: [QUERY_KEYS.LINE_ITEMS, takeoffId]
+        //     })
+        // }
     })
 }

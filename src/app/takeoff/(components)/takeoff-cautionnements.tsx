@@ -83,6 +83,7 @@ function TakeoffCautionnementRow({ takeoffFee }: { takeoffFee: any }) {
                                     onBlur={handleBlur}
                                     type="number"
                                     disabled={isUpdating}
+                                    placeholder="0"
                                 />
                             </FormControl>
                             <FormMessage />
