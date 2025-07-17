@@ -11,6 +11,7 @@ import {
 	TabsTrigger,
 } from '@/components/ui/tabs';
 import { Loading } from '@/components/loading';
+import { Skeleton } from '@/components/ui/skeleton';
 
 import { useTakeoffData, useAdminFees } from '@/hooks/queries';
 import { useMappedLineItems } from '@/hooks/compounds/use-mapped-line-items';
@@ -203,6 +204,11 @@ export default function Takeoff() {
 		}, 0);
 	}, [mappedLineItems]);
 
+	// Check if takeoff has linked quote (read-only mode)
+	const hasLinkedQuote = useMemo(() => {
+		return !!(takeoff?.linked_quote);
+	}, [takeoff?.linked_quote]);
+
 	// Create columns with stable references - only recreate when handlers change
 	const columns = useMemo(
 		() =>
@@ -214,8 +220,9 @@ export default function Takeoff() {
 				setDeleteDialogOpen: handleSetDeleteDialogOpen,
 				setDeleteItem: handleSetDeleteItem,
 				isDuplicating,
+				disabled: hasLinkedQuote,
 			}),
-		[selectedRows, handleSelectRow, handleEdit, handleDuplicate, handleSetDeleteDialogOpen, handleSetDeleteItem, isDuplicating]
+		[selectedRows, handleSelectRow, handleEdit, handleDuplicate, handleSetDeleteDialogOpen, handleSetDeleteItem, isDuplicating, hasLinkedQuote]
 	);
 
 	const categories = useMemo(() => {
@@ -244,10 +251,11 @@ export default function Takeoff() {
 					setEditModalOpen={setEditModalOpen}
 					selectedItem={selectedItem}
 					setSelectedItem={setSelectedItem}
+                    disabled={hasLinkedQuote}
 				/>
 			),
 		}));
-	}, [categories, mappedLineItems, takeoff, columns, editModalOpen, selectedItem]);
+	}, [categories, mappedLineItems, takeoff, columns, editModalOpen, selectedItem, hasLinkedQuote]);
 
 	const pages = useMemo(() => [
 		{
@@ -271,20 +279,32 @@ export default function Takeoff() {
 
 	return (
 		<>
-        {/* <pre className="text-white">{JSON.stringify(settings, null, 2)}</pre> */}
-			{/* <RenderCounter name="Takeoff" /> */}
-            {/* <pre className="text-white">{JSON.stringify(takeoff, null, 2)}</pre> */}
-			<Header>
-				{!takeoff?.disabled && (
-					<HeaderActions
-						isLoading={isLoading}
-						selectedRows={selectedRows}
-						mappedLineItems={mappedLineItems}
-						projectId={takeoff?.project?.id}
-						takeoffId={itemId}
-						total={total}
-					/>
-				)}
+            <Header>
+				<div className="flex items-center justify-between w-full gap-2">
+					<div className="flex items-center gap-2">
+						{hasLinkedQuote && (
+							<div className="text-sm bg-blue-100 text-blue-800 px-2 py-1 rounded-md font-bold">
+								Mode lecture
+							</div>
+						)}
+					</div>
+					{isLoading ? (
+						<div className="flex flex-row gap-2">
+							<Skeleton className="w-[140px] h-8 rounded-sm bg-muted" />
+							<Skeleton className="w-8 h-8 rounded-sm bg-muted" />
+						</div>
+					) : (
+						<HeaderActions
+							isLoading={isLoading}
+							selectedRows={selectedRows}
+							mappedLineItems={mappedLineItems}
+							projectId={takeoff?.project?.id}
+							takeoffId={itemId}
+							total={total}
+							disabled={hasLinkedQuote}
+						/>
+					)}
+				</div>
 			</Header>
 			{takeoffLoading ? (
 				<Loading text="chargement des informations du devis" />

@@ -1,7 +1,7 @@
 'use client';
 
 import { useMonday } from '@/components/monday-context-provider';
-import { useLineItemsByQuote } from '@/hooks/queries';
+import { useLineItemsByQuote, useQuoteData } from '@/hooks/queries';
 import { useSuppliers } from '@/hooks/queries/use-suppliers';
 import { useProducts } from '@/hooks/queries/use-products';
 import { useDeleteLineItemFromQuoteMutation, useCreateLineItemsForQuoteMutation } from '@/hooks/mutations/use-line-items';
@@ -35,6 +35,9 @@ export default function Quote() {
     
     // Fetch line items for this quote
     const { data: lineItems, isLoading: lineItemsLoading } = useLineItemsByQuote(itemId);
+    
+    // Fetch quote data to check for linked contract
+    const { data: quoteData, isLoading: quoteLoading } = useQuoteData(itemId);
     
     // Fetch suppliers for displaying supplier names
     const { data: suppliers } = useSuppliers();
@@ -134,6 +137,11 @@ export default function Quote() {
     const grandTotal = useMemo(() => {
         return Object.values(categoryTotals).reduce((sum: number, total: any) => sum + (total as number), 0);
     }, [categoryTotals]);
+
+    // Check if quote has linked contract (read-only mode)
+    const hasLinkedContract = useMemo(() => {
+        return !!(quoteData?.linked_contract);
+    }, [quoteData?.linked_contract]);
     
     // Handle row selection
     const handleSelectRow = useCallback((id: string, checked: boolean) => {
@@ -272,18 +280,27 @@ export default function Quote() {
                 setDeleteDialogOpen: handleSetDeleteDialogOpen,
                 setDeleteItem: handleSetDeleteItem,
                 isDuplicating,
+                disabled: hasLinkedContract,
             }),
-        [selectedRows, handleSelectRow, handleEdit, handleDuplicate, handleSetDeleteDialogOpen, handleSetDeleteItem, isDuplicating]
+        [selectedRows, handleSelectRow, handleEdit, handleDuplicate, handleSetDeleteDialogOpen, handleSetDeleteItem, isDuplicating, hasLinkedContract]
     );
     
-    if (lineItemsLoading) {
+    if (lineItemsLoading || quoteLoading) {
         return <Loading text="Chargement des éléments du devis" />;
     }
     
     return (
         <>
+            {/* <pre className="text-white">{JSON.stringify(quoteData, null, 2)}</pre> */}
             <Header>
-                <div className="flex items-center gap-4">
+                <div className="flex items-center justify-between w-full gap-4">
+                    <div className="flex items-center gap-2 mt-1">
+                        {hasLinkedContract && (
+                            <div className="text-sm bg-blue-100 text-blue-800 px-2 py-1 rounded-md font-bold">
+                                Mode lecture
+                            </div>
+                        )}
+                    </div>
                     <div className="text-2xl font-bold">
                         {formatCurrency(Number(grandTotal))}
                     </div>
@@ -311,7 +328,7 @@ export default function Quote() {
                     <div className="flex justify-end">
                         <Popover open={productSelectOpen} onOpenChange={setProductSelectOpen}>
                             <PopoverTrigger asChild>
-                                <Button>
+                                <Button disabled={hasLinkedContract}>
                                     <Plus className="w-4 h-4" />
                                     Ajouter un produit
                                 </Button>
@@ -411,6 +428,7 @@ export default function Quote() {
                 open={editModalOpen}
                 onOpenChange={setEditModalOpen}
                 item={selectedItem}
+                disabled={hasLinkedContract}
             />
         </>
     );

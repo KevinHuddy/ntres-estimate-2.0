@@ -9,7 +9,7 @@ import { formatCurrency } from "@/lib/utils";
 import { useDeleteAdminFees, useCreateAdminFees, useUpdateAdminFees } from "@/hooks/mutations";
 import { useAdminFees } from "@/hooks/queries";
 
-export default function TakeoffCategoryHeader({category, lines, takeoff}: {category: string, lines: any[], takeoff: any}) {
+export default function TakeoffCategoryHeader({category, lines, takeoff, disabled = false}: {category: string, lines: any[], takeoff: any, disabled?: boolean}) {
     const { context } = useMonday();
     const itemId = context?.itemId;
 
@@ -103,10 +103,10 @@ export default function TakeoffCategoryHeader({category, lines, takeoff}: {categ
                 <Card className="p-0 flex-grow rounded-lg">
                     <Table>
                         <TableBody>
-                            <TableRow name="Profit (%)" total={form.watch("margin") || 0} inputKey="margin" onChange={(key, value) => handleChange(key, value)} form={form} />
-                            <TableRow name="Administration (%)" total={form.watch("admin") || 0} inputKey="admin" onChange={(key, value) => handleChange(key, value)} form={form} />
-                            <TableRow name="Imprévues (%)" total={form.watch("unforeseen") || 0} inputKey="unforeseen" onChange={(key, value) => handleChange(key, value)} form={form} />
-                            <TableRow name="Autres (%)" total={form.watch("other") || 0} inputKey="other" onChange={(key, value) => handleChange(key, value)} form={form} />
+                            <TableRow name="Profit (%)" total={form.watch("margin") || 0} inputKey="margin" onChange={(key, value) => handleChange(key, value)} form={form} disabled={disabled} />
+                            <TableRow name="Administration (%)" total={form.watch("admin") || 0} inputKey="admin" onChange={(key, value) => handleChange(key, value)} form={form} disabled={disabled} />
+                            <TableRow name="Imprévues (%)" total={form.watch("unforeseen") || 0} inputKey="unforeseen" onChange={(key, value) => handleChange(key, value)} form={form} disabled={disabled} />
+                            <TableRow name="Autres (%)" total={form.watch("other") || 0} inputKey="other" onChange={(key, value) => handleChange(key, value)} form={form} disabled={disabled} />
                         </TableBody>
                     </Table>
                 </Card>
@@ -117,10 +117,10 @@ export default function TakeoffCategoryHeader({category, lines, takeoff}: {categ
                 <Card className="p-0 flex-grow rounded-lg">
                     <Table>
                         <TableBody>
-                            <TableRow name="Sous-total" total={subtotal} />
-                            <TableRow name="Administration" total={adminFeesTotals} />
-                            <TableRow name="Cautionnements et assurances" total={cautionnementsTotals} />
-                            <TableRow name="Total" total={subtotal + adminFeesTotals + cautionnementsTotals} />
+                            <TableRow name="Sous-total" total={subtotal} disabled={disabled} />
+                            <TableRow name="Administration" total={adminFeesTotals} disabled={disabled} />
+                            <TableRow name="Cautionnements et assurances" total={cautionnementsTotals} disabled={disabled} />
+                            <TableRow name="Total" total={subtotal + adminFeesTotals + cautionnementsTotals} disabled={disabled} />
                         </TableBody>
                     </Table>
                 </Card>
@@ -130,7 +130,7 @@ export default function TakeoffCategoryHeader({category, lines, takeoff}: {categ
 }
 
 
-function TableRow({name, total, inputKey, onChange, form}: {name: string, total: number, inputKey?: string, onChange?: (inputKey: string, value: string) => void, form?: any}) {
+function TableRow({name, total, inputKey, onChange, form, disabled = false}: {name: string, total: number, inputKey?: string, onChange?: (inputKey: string, value: string) => void, form?: any, disabled?: boolean}) {
     return (
         <TableRowBase>
             <TableCell className="text-sm py-2 px-2">
@@ -142,6 +142,7 @@ function TableRow({name, total, inputKey, onChange, form}: {name: string, total:
                         <Input
                             className="w-18 h-6"
                             type="number"
+                            disabled={disabled}
                             value={form.watch(inputKey) || ''}
                             onChange={(e) => onChange(inputKey, e.target.value)}
                             placeholder="0"

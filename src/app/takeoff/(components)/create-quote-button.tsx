@@ -22,9 +22,10 @@ interface CreateQuoteButtonProps {
     projectId: string;
     takeoffId: string;
     total: number;
+    disabled?: boolean;
 }
 
-export default function CreateQuoteButton({ projectId, takeoffId, total }: CreateQuoteButtonProps) {
+export default function CreateQuoteButton({ projectId, takeoffId, total, disabled }: CreateQuoteButtonProps) {
     const [open, setOpen] = useState(false);
     const [quoteId, setQuoteId] = useState<string | null>(null);
 
@@ -72,7 +73,7 @@ export default function CreateQuoteButton({ projectId, takeoffId, total }: Creat
     return (
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
-                <Button variant="secondary" size="sm">
+                <Button variant="secondary" size="sm" disabled={disabled}>
                     <Plus className="w-4 h-4" />
                     Créer soumission
                 </Button>

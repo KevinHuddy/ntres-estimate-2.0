@@ -2,6 +2,7 @@ export { useTakeoffData } from './use-takeoff'
 export { useTemplateLineItems } from './use-template-line-items'
 export { useLineItems } from './use-line-items';
 export { useLineItemsByQuote } from './use-line-items';
+export { useQuoteData } from './use-quotes';
 export { useBoards } from './use-boards'
 export { useVariables } from './use-variables'
 export { useAdminFees } from './use-admin-fees'

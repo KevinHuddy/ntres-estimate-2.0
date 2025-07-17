@@ -6,11 +6,11 @@ import TakeoffCautionnements from "./takeoff-cautionnements";
 import SettingsVariables from "./takeoff-variables";
 import CreateVariableButton from "./creata-variable-button";
 
-export default function SettingsButton() {
+export default function SettingsButton({ disabled }: { disabled?: boolean }) {
 	return (
 		<Drawer direction={"right"}>
 			<DrawerTrigger asChild>
-				<Button variant="default" size="sm">
+				<Button variant="default" size="sm" disabled={disabled}>
 					<Settings2 size={16} />
 					<span className="sr-only">Configuration</span>
 				</Button>

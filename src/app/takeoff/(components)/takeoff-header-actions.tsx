@@ -10,6 +10,7 @@ export default function TakeoffHeaderActions({
     projectId,
     takeoffId,
     total,
+    disabled,
 }: {
     isLoading: boolean;
     selectedRows?: Record<string, boolean>;
@@ -17,6 +18,7 @@ export default function TakeoffHeaderActions({
     projectId?: string;
     takeoffId?: string;
     total?: number;
+    disabled?: boolean;
 }) {
     return (
         <>
@@ -32,13 +34,15 @@ export default function TakeoffHeaderActions({
                             projectId={projectId || ""} 
                             takeoffId={takeoffId || ""} 
                             total={total || 0} 
+                            disabled={disabled}
                         />
                         <PriceRequestButton 
                             selectedRows={selectedRows || {}}
                             mappedLineItems={mappedLineItems || []}
                             projectId={projectId}
+                            disabled={disabled}
                         />
-                        <SettingsButton />
+                        <SettingsButton disabled={disabled} />
                     </>
                 )
             }

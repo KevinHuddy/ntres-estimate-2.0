@@ -32,6 +32,7 @@ interface EditModalProps {
 	open: boolean;
 	onOpenChange: (open: boolean) => void;
 	item: any | null;
+    disabled?: boolean;
 }
 
 const schema = z.object({
@@ -56,7 +57,7 @@ const schema = z.object({
 
 type FormData = z.infer<typeof schema>;
 
-export default function EditModal({ open, onOpenChange, item }: EditModalProps) {
+export default function EditModal({ open, onOpenChange, item, disabled = false }: EditModalProps) {
 	const { context, settings } = useMonday();
 	const [showCloseConfirm, setShowCloseConfirm] = useState(false);
 
@@ -289,7 +290,7 @@ export default function EditModal({ open, onOpenChange, item }: EditModalProps) 
 
 	return (
 		<>
-			<Dialog open={open} onOpenChange={handleClose}>
+			<Dialog open={disabled ? false : open} onOpenChange={disabled ? () => {} : handleClose}>
 				<DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
 					<DialogHeader>
 						<DialogTitle>Modifier l&apos;élément</DialogTitle>

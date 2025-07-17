@@ -14,11 +14,13 @@ import { useMonday } from "@/components/monday-context-provider"
 export default function PriceRequestButton({ 
     selectedRows, 
     mappedLineItems,
-    projectId
+    projectId,
+    disabled
 }: { 
     selectedRows: Record<string, boolean>;
     mappedLineItems: any[];
     projectId?: string;
+    disabled?: boolean;
 }) {
     const { context } = useMonday();
     const takeoffId = context?.itemId;
@@ -223,7 +225,7 @@ export default function PriceRequestButton({
     return (
         <Drawer direction={"right"}>
             <DrawerTrigger asChild>
-                <Button variant="secondary" size="sm">
+                <Button variant="secondary" size="sm" disabled={disabled}>
                     <DollarSign className="w-4 h-4" />
                     Demande de prix
                     {selectedItems.length > 0 && (

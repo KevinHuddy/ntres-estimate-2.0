@@ -83,6 +83,8 @@ export const useTakeoffData = (takeoffId: string | undefined): UseQueryResult<an
             }
 
             return {
+                id: takeoff?.id,
+                name: takeoff?.name,
                 takeoff_fees: settings?.COLUMNS?.TAKEOFF?.FEE?.map((fee: any) => ({
                     id: fee,
                     value: getColValue(takeoffCols, fee)?.number,
@@ -92,7 +94,9 @@ export const useTakeoffData = (takeoffId: string | undefined): UseQueryResult<an
                     id: getColValue(takeoffCols, settings?.COLUMNS?.TAKEOFF?.LINKED_PROJECT)?.linked_items?.[0]?.id,
                     name: getColValue(takeoffCols, settings?.COLUMNS?.TAKEOFF?.LINKED_PROJECT)?.linked_items?.[0].name,
                     number: getColValue(takeoffCols, settings?.COLUMNS?.TAKEOFF?.LINKED_PROJECT_NUMBER)?.display_value,
-                }
+                },
+                linked_quote: getColValue(takeoffCols, settings?.COLUMNS?.TAKEOFF?.LINKED_QUOTE)?.linked_items?.[0]?.id,
+                total: getColValue(takeoffCols, settings?.COLUMNS?.TAKEOFF?.TOTAL)?.number || 0,
             }
         },
         enabled: !!takeoffId,

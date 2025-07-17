@@ -33,10 +33,11 @@ const SupplierName = memo(({ supplierName }: { supplierName: string | null }) =>
 SupplierName.displayName = "SupplierName";
 
 // Component for select checkbox
-const SelectCell = memo(({ row, selectedRows, handleSelectRow }: { 
+const SelectCell = memo(({ row, selectedRows, handleSelectRow, disabled }: { 
     row: any, 
     selectedRows: Record<string, boolean>, 
-    handleSelectRow: (id: string, checked: boolean) => void 
+    handleSelectRow: (id: string, checked: boolean) => void,
+    disabled?: boolean
 }) => {
     const isSelected = selectedRows[row.id] || false;
     
@@ -45,6 +46,7 @@ const SelectCell = memo(({ row, selectedRows, handleSelectRow }: {
             checked={isSelected}
             onCheckedChange={(checked) => handleSelectRow(row.id, !!checked)}
             aria-label="Select row"
+            disabled={disabled}
         />
     );
 });
@@ -58,19 +60,21 @@ const ActionsDropdown = memo(({
     onDuplicate, 
     setDeleteDialogOpen, 
     setDeleteItem, 
-    isDuplicating 
+    isDuplicating,
+    disabled 
 }: { 
     row: any, 
     onEdit: (row: any) => void, 
     onDuplicate: (row: any) => void, 
     setDeleteDialogOpen: (open: boolean) => void, 
     setDeleteItem: (item: any) => void, 
-    isDuplicating: (id: string) => boolean 
+    isDuplicating: (id: string) => boolean,
+    disabled?: boolean 
 }) => {
     return (
         <DropdownMenu>
             <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="h-8 w-8 p-0" onClick={(e) => e.stopPropagation()}>
+                <Button variant="ghost" className="h-8 w-8 p-0" onClick={(e) => e.stopPropagation()} disabled={disabled}>
                     <span className="sr-only">Open menu</span>
                     <MoreHorizontal className="h-4 w-4" />
                 </Button>
@@ -154,6 +158,7 @@ interface ColumnsConfig {
     setDeleteDialogOpen: (open: boolean) => void;
     setDeleteItem: (item: any) => void;
     isDuplicating: (id: string) => boolean;
+    disabled?: boolean;
 }
 
 export const createQuoteColumns = ({ 
@@ -164,6 +169,7 @@ export const createQuoteColumns = ({
     setDeleteDialogOpen,
     setDeleteItem,
     isDuplicating,
+    disabled,
 }: ColumnsConfig): ColumnDef<any>[] => [
     {
         id: 'select',
@@ -174,6 +180,7 @@ export const createQuoteColumns = ({
                 row={row}
                 selectedRows={selectedRows}
                 handleSelectRow={handleSelectRow}
+                disabled={disabled}
             />
         )
     },
@@ -279,6 +286,7 @@ export const createQuoteColumns = ({
                 setDeleteDialogOpen={setDeleteDialogOpen}
                 setDeleteItem={setDeleteItem}
                 isDuplicating={isDuplicating}
+                disabled={disabled}
             />
         ),
     },

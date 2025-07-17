@@ -29,6 +29,7 @@ interface CategoryProps {
 	setEditModalOpen?: (open: boolean) => void;
 	selectedItem?: any;
 	setSelectedItem?: (item: any) => void;
+    disabled?: boolean;
 }
 
 export default function Category({ 
@@ -40,6 +41,7 @@ export default function Category({
 	setEditModalOpen,
 	selectedItem,
 	setSelectedItem,
+    disabled = false,
 }: CategoryProps) {
 	// Fetch suppliers once at category level
 	const { data: suppliers } = useSuppliers();
@@ -144,6 +146,7 @@ export default function Category({
 				category={category}
 				lines={lines}
 				takeoff={takeoff}
+				disabled={disabled}
 			/>
 			
 			{/* Filters Section */}
@@ -166,7 +169,7 @@ export default function Category({
 				<div className="flex justify-end">
 					<Popover open={productSelectOpen} onOpenChange={setProductSelectOpen}>
 						<PopoverTrigger asChild>
-							<Button>
+							<Button disabled={disabled}>
 								<Plus className="w-4 h-4" />
 								Ajouter un item
 							</Button>
@@ -229,12 +232,14 @@ export default function Category({
 				data={filteredData}
 				columns={columns}
 				onRowClick={handleRowClick}
+				disabled={disabled}
 			/>
 
 			<EditModal
 				open={editModalOpen}
 				onOpenChange={setEditModalOpen || (() => {})}
 				item={selectedItem}
+				disabled={disabled}
 			/>
 		</div>
 	);

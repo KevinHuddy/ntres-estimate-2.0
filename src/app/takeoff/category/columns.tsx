@@ -41,6 +41,7 @@ interface ColumnsConfig {
     deleteItem?: any;
     setDeleteItem?: (item: any) => void;
     isDuplicating?: (itemId: string) => boolean;
+    disabled?: boolean;
 }
 
 // Delete confirmation dialog component
@@ -82,7 +83,8 @@ const ActionsDropdown = memo(({
     onDuplicate, 
     setDeleteDialogOpen, 
     setDeleteItem, 
-    isDuplicating 
+    isDuplicating,
+    disabled 
 }: {
     row: any;
     onEdit?: (row: any) => void;
@@ -90,6 +92,7 @@ const ActionsDropdown = memo(({
     setDeleteDialogOpen?: (open: boolean) => void;
     setDeleteItem?: (item: any) => void;
     isDuplicating?: (itemId: string) => boolean;
+    disabled?: boolean;
 }) => {
     const handleEdit = useCallback((e: React.MouseEvent) => {
         e.stopPropagation();
@@ -133,7 +136,7 @@ const ActionsDropdown = memo(({
                     <Button
                         variant="ghost"
                         className="h-8 w-8 p-0"
-                        disabled={isRowDuplicating}
+                        disabled={isRowDuplicating || disabled}
                     >
                         <span className="sr-only">Ouvrir le menu</span>
                         <MoreHorizontal className="h-4 w-4" />
@@ -177,10 +180,11 @@ const ActionsDropdown = memo(({
 ActionsDropdown.displayName = "ActionsDropdown";
 
 // Memoized checkbox component
-const SelectCell = memo(({ row, selectedRows, handleSelectRow }: {
+const SelectCell = memo(({ row, selectedRows, handleSelectRow, disabled }: {
     row: any;
     selectedRows: Record<string, boolean>;
     handleSelectRow: (id: string, checked: boolean) => void;
+    disabled?: boolean;
 }) => {
     const handleCheckboxChange = useCallback((value: boolean) => {
         handleSelectRow(row.original.id, value);
@@ -197,6 +201,7 @@ const SelectCell = memo(({ row, selectedRows, handleSelectRow }: {
                     checked={selectedRows[row.original.id] || false}
                     onCheckedChange={handleCheckboxChange}
                     aria-label="Select row"
+                    disabled={disabled}
                 />
             ) : (
                 <MemoizedClose className="h-4 w-4 text-muted-foreground/40" />
@@ -215,6 +220,7 @@ export const createColumns = ({
     setDeleteDialogOpen,
     setDeleteItem,
     isDuplicating,
+    disabled,
 }: ColumnsConfig): ColumnDef<any>[] => [
     {
         id: 'select',
@@ -225,6 +231,7 @@ export const createColumns = ({
                 row={row}
                 selectedRows={selectedRows}
                 handleSelectRow={handleSelectRow}
+                disabled={disabled}
             />
         )
     },
@@ -330,6 +337,7 @@ export const createColumns = ({
                 setDeleteDialogOpen={setDeleteDialogOpen}
                 setDeleteItem={setDeleteItem}
                 isDuplicating={isDuplicating}
+                disabled={disabled}
             />
         ),
     },
