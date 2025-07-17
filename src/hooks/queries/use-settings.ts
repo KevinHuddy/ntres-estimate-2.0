@@ -28,6 +28,7 @@ const query = `
         $adminFeesBoardId: [ID!]
         $productsBoardId: [ID!]
         $priceRequestBoardId: [ID!]
+        $projectsBoardId: [ID!]
     ) {
         complexity {
             before
@@ -40,6 +41,15 @@ const query = `
         adminFees: boards(ids: $adminFeesBoardId) { ...ColumnsFragment }
         products: boards(ids: $productsBoardId) { ...ColumnsFragment }
         priceRequest: boards(ids: $priceRequestBoardId) { ...ColumnsFragment }
+        projects: boards(ids: $projectsBoardId) { ...ColumnsFragment }
+    }`
+
+const subQuery = `
+    ${columnFragment}
+    query getSubColumnSettings (
+        $priceRequestSubBoardId: [ID!]
+    ) {
+        priceRequest: boards(ids: $priceRequestSubBoardId) { ...ColumnsFragment }
     }`
 
 
@@ -59,6 +69,8 @@ const COLUMNS = ({
     adminFeesCols,
     productsCols,
     priceRequestCols,
+    priceRequestSubCols,
+    projectsSubCols,
 }: {
     takeoffCols: any,
     templateLineItemsCols: any,
@@ -67,6 +79,8 @@ const COLUMNS = ({
     adminFeesCols: any,
     productsCols: any,
     priceRequestCols: any,
+    priceRequestSubCols: any,
+    projectsSubCols: any,
 }) => {
     return {
         TAKEOFF: {
@@ -140,6 +154,17 @@ const COLUMNS = ({
             LINKED_TAKEOFF: getColId(priceRequestCols, "{{{linked_takeoff}}}"),
             LINKED_SUPPLIER: getColId(priceRequestCols, "{{{linked_supplier}}}"),
             LINKED_PROJECT: getColId(priceRequestCols, "{{{linked_project}}}"),
+        },
+        PRICE_REQUEST_SUB: {
+            QTY: getColId(priceRequestSubCols, "{{{qty}}}"),
+            UNIT_TYPE: getColId(priceRequestSubCols, "{{{unit}}}"),
+            LINKED_LINE_ITEM: getColId(priceRequestSubCols, "{{{line_id}}}"),
+            LINKED_TAKEOFF: getColId(priceRequestSubCols, "{{{takeoff_id}}}"),
+            LINKED_PRODUCT: getColId(priceRequestSubCols, "{{{product}}}"),
+        },
+        PROJECTS_SUB: {
+            NUMBER: getColId(projectsSubCols, "{{{number}}}"),
+            LINKED_QUOTE: getColId(projectsSubCols, "{{{linked_quote}}}"),
         }
     }
 }
@@ -163,8 +188,28 @@ export const useGetSettings = (options: any = {}): UseQueryResult<any> => {
                         adminFeesBoardId: mainSettings?.BOARD_ADMIN_FEES,
                         productsBoardId: mainSettings?.BOARD_PRODUCTS,
                         priceRequestBoardId: mainSettings?.BOARD_PRICE_REQUEST,
+                        projectsBoardId: mainSettings?.BOARD_PROJECTS,
                     }
                 })
+
+                function findSubBoardId(columns) {
+                    const subtasks = columns?.find((column) => column.type === "subtasks")
+                    const settings = JSON.parse(subtasks?.settings_str);
+                    return settings?.boardIds?.[0] || null;
+                }
+
+                const SUB_BOARDS = {
+                    PRICE_REQUEST: findSubBoardId(columnSettings?.data?.priceRequest?.[0]?.columns),
+                    PROJECTS: findSubBoardId(columnSettings?.data?.projects?.[0]?.columns),
+                }
+
+                const subColumnSettings = await monday.api(
+                    subQuery, { variables: {
+                        priceRequestSubBoardId: SUB_BOARDS?.PRICE_REQUEST,
+                        projectsSubBoardId: SUB_BOARDS?.PROJECTS,
+                    }
+                })
+
 
                 console.log(`🏋️‍♂️ Complexity Use Settings: ${JSON.stringify(columnSettings?.data?.complexity)}`)
 
@@ -176,6 +221,8 @@ export const useGetSettings = (options: any = {}): UseQueryResult<any> => {
                     adminFeesCols: columnSettings?.data?.adminFees?.[0]?.columns,
                     productsCols: columnSettings?.data?.products?.[0]?.columns,
                     priceRequestCols: columnSettings?.data?.priceRequest?.[0]?.columns,
+                    priceRequestSubCols: subColumnSettings?.data?.priceRequest?.[0]?.columns,
+                    projectsSubCols: subColumnSettings?.data?.projects?.[0]?.columns,
                 })
 
                 return {
@@ -192,6 +239,9 @@ export const useGetSettings = (options: any = {}): UseQueryResult<any> => {
                         ACTIVITY_CODES: mainSettings?.BOARD_ACTIVITY_CODES,
                         TOOLS: mainSettings?.BOARD_TOOLS,
                         PRICE_REQUEST: mainSettings?.BOARD_PRICE_REQUEST,
+                        PRICE_REQUEST_SUB: SUB_BOARDS?.PRICE_REQUEST,
+                        PROJECTS: mainSettings?.BOARD_PROJECTS,
+                        PROJECTS_SUB: SUB_BOARDS?.PROJECTS,
                     },
                     CATEGORIES: {
                         TOOLS: mainSettings?.CATEGORY_TOOLS,

@@ -176,15 +176,23 @@ export default function PriceRequestButton({
                 
                 // Process subitems for this supplier
                 for (const product of submissionData.supplierQuotes[supplierId]) {
-                    await createPriceRequestSubitem({
+                    console.log({
                         parentItemId: priceRequestId,
                         itemName: product.productName,
-                        category: product.productCategory,
-                        type: product.productType,
                         qty: product.productQty,
                         unitType: product.unitType,
                         lineId: product.productId,
-                        takeoffId: takeoffId
+                        takeoffId: takeoffId,
+                        productId: product.linked_product || null,
+                    })
+                    await createPriceRequestSubitem({
+                        parentItemId: priceRequestId,
+                        itemName: product.productName,
+                        qty: product.productQty,    
+                        unitType: product.unitType,
+                        lineId: product.productId,
+                        takeoffId: takeoffId,
+                        productId: product.linked_product,
                     });
                 }
                 

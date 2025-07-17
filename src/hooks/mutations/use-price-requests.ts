@@ -27,6 +27,16 @@ export const useCreatePriceRequest = () => {
             takeoffId: string;
             projectId?: string;
         }) => {
+            console.log({
+                itemName: supplierName,
+                boardId: boardId,
+                createLabels: true,
+                columnValues: {
+                    [cols.LINKED_TAKEOFF]: takeoffId,
+                    [cols.LINKED_SUPPLIER]: supplierId,
+                    [cols.LINKED_PROJECT]: Number(projectId),
+                }
+            })
             return await client.items.create({
                 itemName: supplierName,
                 boardId: boardId,
@@ -50,52 +60,57 @@ export const useCreatePriceRequest = () => {
 
 // Mock mutation for creating price request subitems
 export const useCreatePriceRequestSubitem = () => {
+    const { settings } = useMonday()
+    const { cols } = getBoardSettings(settings, "PRICE_REQUEST_SUB")
+    const queryClient = useQueryClient()
+
     return useMutation({
         mutationFn: async ({
             parentItemId,
             itemName,
-            category,
-            type,
             qty,
             unitType,
             lineId,
             takeoffId,
+            productId,
         }: {
             parentItemId: string;
             itemName: string;
-            category: string;
-            type: string;
             qty: number;
             unitType: string;
             lineId: string;
             takeoffId: string;
+            productId: string;
         }) => {
             // Mock API call - replace with actual implementation
             console.log("Creating price request subitem:", { 
                 parentItemId, 
                 itemName, 
-                category, 
-                type, 
                 qty, 
                 unitType, 
                 lineId, 
                 takeoffId 
             });
             
-            return await client.items.create({
-                itemName: itemName,
-                boardId: boardId,
+            return await client.subitems.create({
+                itemName,
+                parentItemId,
                 createLabels: true,
                 columnValues: {
-                    [cols.LINKED_TAKEOFF]: takeoffId,
-                    [cols.LINKED_SUPPLIER]: supplierId,
-                    [cols.LINKED_PROJECT]: projectId,
+                    [cols.QTY]: qty,
+                    [cols.UNIT_TYPE]: unitType,
+                    [cols.LINKED_LINE_ITEM]: lineId.toString(),
+                    [cols.LINKED_TAKEOFF]: takeoffId.toString(),
+                    [cols.LINKED_PRODUCT]: productId || null,
                 }
             })
         },
         onSuccess: (data) => {
             console.log("Price request subitem created successfully:", data);
             // You can add query invalidation here if needed
+        },
+        onSettled: (data, error, {takeoffId}) => {
+            queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.PRICE_REQUEST, takeoffId] })
         },
         onError: (error) => {
             console.error("Failed to create price request subitem:", error);

@@ -8,11 +8,15 @@ export default function TakeoffHeaderActions({
     selectedRows,
     mappedLineItems,
     projectId,
+    takeoffId,
+    total,
 }: {
     isLoading: boolean;
     selectedRows?: Record<string, boolean>;
     mappedLineItems?: any[];
     projectId?: string;
+    takeoffId?: string;
+    total?: number;
 }) {
     return (
         <>
@@ -24,7 +28,11 @@ export default function TakeoffHeaderActions({
                     </div>
                 ) : (
                     <>
-                        <CreateQuoteButton/>
+                        <CreateQuoteButton 
+                            projectId={projectId || ""} 
+                            takeoffId={takeoffId || ""} 
+                            total={total || 0} 
+                        />
                         <PriceRequestButton 
                             selectedRows={selectedRows || {}}
                             mappedLineItems={mappedLineItems || []}

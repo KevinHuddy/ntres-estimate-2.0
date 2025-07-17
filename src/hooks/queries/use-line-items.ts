@@ -143,3 +143,143 @@ export const useLineItems = (takeoffId: string | undefined, options: any = {}): 
         ...options,
     })
 }
+
+export const useLineItemsByQuote = (quoteId: string | undefined, options: any = {}): UseQueryResult<any> => {
+    const { settings, monday } = useMonday()
+
+    function getColValue(cols: any, colId: string) {
+        return cols?.find((col) => col?.id === colId)
+    }
+    
+    return useQuery({
+        queryKey: [QUERY_KEYS.LINE_ITEMS, 'quote', quoteId],
+        queryFn: async () => {
+            
+            let cursor = null
+            const items = []
+            
+            const response = await monday.api(`
+                query getLineItemsByQuote (
+                    $lineItemsBoardId: [ID!]
+                ) {
+                    complexity {
+                        before
+                        query
+                    }
+                    boards(ids: $lineItemsBoardId) {
+                        items_page ( 
+                            limit: ${LIMITS.LINE_ITEMS},
+                            query_params: {
+                                rules: [
+                                    {
+                                        column_id: "${settings?.COLUMNS?.LINE_ITEMS?.LINKED_QUOTE}",
+                                        compare_value: "${quoteId}",
+                                        operator: any_of
+                                    }
+                                ]
+                            }
+                        ) {
+                            cursor
+                            items {
+                                id
+                                name
+                                column_values (ids: ${JSON.stringify(Object.values(settings?.COLUMNS?.LINE_ITEMS).flat())}) {
+                                    id
+                                    ... on TextValue { text }
+                                    ... on StatusValue { text }
+                                    ... on DropdownValue { text }
+                                    ... on BoardRelationValue { linked_items { id, name } }
+                                    ... on MirrorValue { display_value }
+                                    ... on NumbersValue { number }
+                                }
+                            }
+                        }
+                    }
+                }`, { 
+                    variables: { 
+                        lineItemsBoardId: settings?.BOARDS?.LINE_ITEMS,
+                    } 
+                }
+            )
+            
+            const data = response?.data
+            cursor = data?.boards?.[0]?.items_page?.cursor
+            console.log(`🏋️‍♂️ Complexity Use Line Items By Quote: ${JSON.stringify(data?.complexity)}`)
+            items.push(...data?.boards?.[0]?.items_page?.items)
+
+            while (cursor) {
+                const response = await monday.api(`
+                    query getNextLineItemsByQuote (
+                        $cursor: String!
+                    ) {
+                        complexity { query }
+                        next_items_page(limit: ${LIMITS.LINE_ITEMS}, cursor: $cursor) {
+                            cursor
+                            items {
+                                id
+                                name
+                                column_values (ids: ${JSON.stringify(Object.values(settings?.COLUMNS?.LINE_ITEMS).flat())}) {
+                                    id
+                                    ... on TextValue { text }
+                                    ... on StatusValue { text }
+                                    ... on DropdownValue { text }
+                                    ... on BoardRelationValue { linked_items { id, name } }
+                                    ... on MirrorValue { display_value }
+                                    ... on NumbersValue { number }
+                                }
+                            }
+                        }
+                    }`, { 
+                        variables: { 
+                            cursor: cursor,
+                        } 
+                    })
+
+                const data = response?.data
+                cursor = data?.next_items_page?.cursor
+                console.log(`🏋️‍♂️ Complexity Use Line Items By Quote Next Page: ${JSON.stringify(data?.complexity)}`)
+                items.push(...data?.next_items_page?.items)
+            }
+            
+            const lineItems = items?.map((item) => {
+                const cols = item?.column_values
+                const settingsCols = settings?.COLUMNS?.LINE_ITEMS
+
+                return {
+                    id: item?.id,
+                    name: item?.name,
+                    values: getColValue(cols, settingsCols?.VALUES)?.linked_items?.map(i => i?.id) || [],
+                    values_total: Number(getColValue(cols, settingsCols?.VALUES_TOTAL)?.display_value || 0),
+                    category: getColValue(cols, settingsCols?.CATEGORY)?.text,
+                    type: getColValue(cols, settingsCols?.TYPE)?.text || "",
+                    unit_type: getColValue(cols, settingsCols?.UNIT_TYPE)?.text || "",
+                    qty_takeoff: getColValue(cols, settingsCols?.QTY_TAKEOFF)?.number || 0,
+                    qty_quote: getColValue(cols, settingsCols?.QTY_QUOTE)?.number || 0,
+                    cost_takeoff: getColValue(cols, settingsCols?.COST_TAKEOFF)?.number || 0,
+                    cost_quote: getColValue(cols, settingsCols?.COST_QUOTE)?.number || 0,
+                    linked_activity_code: getColValue(cols, settingsCols?.LINKED_ACTIVITY_CODE)?.text || "",
+                    linked_takeoff: getColValue(cols, settingsCols?.LINKED_TAKEOFF)?.text || "",
+                    linked_quote: getColValue(cols, settingsCols?.LINKED_QUOTE)?.text || undefined,
+                    linked_project: getColValue(cols, settingsCols?.LINKED_PROJECT)?.text || undefined,
+                    linked_product: getColValue(cols, settingsCols?.LINKED_PRODUCT)?.text || undefined,
+                    linked_template_line_item: getColValue(cols, settingsCols?.LINKED_TEMPLATE_LINE_ITEM)?.text || "",
+                    linked_supplier: getColValue(cols, settingsCols?.LINKED_SUPPLIER)?.text || undefined,
+                    linked_price_request: getColValue(cols, settingsCols?.LINKED_PRICE_REQUEST)?.text || "",
+                    waste: getColValue(cols, settingsCols?.WASTE)?.number || 0,
+                    divider: getColValue(cols, settingsCols?.DIVIDER)?.number || 0,
+                    multiplier: getColValue(cols, settingsCols?.MULTIPLIER)?.number || 0,
+                    mo_hours: getColValue(cols, settingsCols?.MO_HOURS)?.number || 0,
+                    mo_qty: getColValue(cols, settingsCols?.MO_QTY)?.number || 0,
+                    mo_days: getColValue(cols, settingsCols?.MO_DAYS)?.number || 0,
+                }
+            })
+            
+
+            return lineItems
+        },
+        enabled: !!quoteId && !!settings,
+        staleTime: CACHE_TIMES.NEVER_STALE,
+        gcTime: CACHE_TIMES.NEVER_STALE,
+        ...options,
+    })
+}

@@ -211,6 +211,184 @@ export const useUpdateLineItemsMutation = () => {
     })
 }
 
+export const useUpdateLineItemsForQuoteMutation = () => {
+    const { settings } = useMonday();
+    const { cols, boardId} = getBoardSettings(settings, "LINE_ITEMS")
+    
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: async ({
+            id,
+            columns,
+            quoteId
+        }: {
+            id: string
+            columns: Record<string, string>
+            quoteId: string
+        }) => {
+            console.log({id, columns, quoteId})
+            try {
+                const response = await client.items.update({
+                    itemId: id,
+                    boardId: boardId,
+                    createLabels: true,
+                    columnValues: {
+                        ...columns,
+                        [cols.LINKED_QUOTE]: quoteId.toString(),
+                    }
+                })
+                return response
+            } catch (error) {
+                console.error(error)
+                toast.error("Failed to update line items")
+                return null
+            }
+        },
+        onMutate: async ({ id, columns, quoteId }) => {
+            // Cancel any outgoing refetches for quote-specific queries
+            await queryClient.cancelQueries({ queryKey: [QUERY_KEYS.LINE_ITEMS, 'quote', quoteId] })
+            
+            // Snapshot the previous value
+            const previousLineItems = queryClient.getQueryData([QUERY_KEYS.LINE_ITEMS, 'quote', quoteId])
+            
+            // Optimistically update the cache
+            queryClient.setQueryData([QUERY_KEYS.LINE_ITEMS, 'quote', quoteId], (old: any[]) => {
+                if (!old) return old
+                return old.map((item: any) => {
+                    if (item.id === id) {
+                        return {
+                            ...item,
+                            name: columns.name || item.name,
+                            category: columns[cols.CATEGORY] || item.category,
+                            type: columns[cols.TYPE] || item.type,
+                            unit_type: columns[cols.UNIT_TYPE] || item.unit_type,
+                            qty_quote: columns[cols.QTY_QUOTE] ? Number(columns[cols.QTY_QUOTE]) : item.qty_quote,
+                            cost_quote: columns[cols.COST_QUOTE] ? Number(columns[cols.COST_QUOTE]) : item.cost_quote,
+                            linked_supplier: columns[cols.LINKED_SUPPLIER] || item.linked_supplier,
+                            _isOptimistic: true,
+                        }
+                    }
+                    return item
+                })
+            })
+            
+            return { previousLineItems }
+        },
+        onError: (error, { quoteId }, context) => {
+            // If the mutation fails, use the context returned from onMutate to roll back
+            if (context?.previousLineItems) {
+                queryClient.setQueryData([QUERY_KEYS.LINE_ITEMS, 'quote', quoteId], context.previousLineItems)
+            }
+            toast.error("Erreur lors de la mise à jour de l'élément")
+        },
+        onSuccess: (data, { quoteId }) => {
+            // Mark optimistic update as complete
+            queryClient.setQueryData([QUERY_KEYS.LINE_ITEMS, 'quote', quoteId], (old: any[]) => {
+                if (!old) return old
+                return old.map((item: any) => ({
+                    ...item,
+                    _isOptimistic: false
+                }))
+            })
+        },
+    })
+}
+
+export const useCreateLineItemsForQuoteMutation = () => {
+    const { settings } = useMonday();
+    const { cols, boardId} = getBoardSettings(settings, "LINE_ITEMS")
+    
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: async ({
+            name,
+            columns,
+            quoteId
+        }: {
+            name: string
+            columns: Record<string, string>
+            quoteId: string
+        }) => {
+            console.log({name, columns, quoteId})
+            try {
+                const response = await client.items.create({
+                    itemName: name,
+                    boardId: boardId,
+                    createLabels: true,
+                    columnValues: {
+                        ...columns, 
+                        [cols.LINKED_QUOTE]: quoteId.toString(),
+                    }
+                })
+                return response
+            } catch (error) {
+                console.error(error)    
+                toast.error("Failed to create line items")
+                return null
+            }
+        },
+        onMutate: async ({ name, columns, quoteId }) => {
+            // Cancel any outgoing refetches
+            await queryClient.cancelQueries({ queryKey: [QUERY_KEYS.LINE_ITEMS, 'quote', quoteId] })
+            
+            // Snapshot the previous value
+            const previousLineItems = queryClient.getQueryData([QUERY_KEYS.LINE_ITEMS, 'quote', quoteId])
+            
+            // Generate a temporary ID for the new item
+            const tempId = `temp-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+
+            console.log({name, columns, quoteId})
+            
+            // Create optimistic line item with parsed column values
+            const optimisticItem = {
+                id: tempId, // Temporary ID to distinguish it
+                name,
+                category: columns[cols.CATEGORY] || '',
+                type: columns[cols.TYPE]?.toString() || '',
+                unit_type: columns[cols.UNIT_TYPE] || '',
+                qty_quote: Number(columns[cols.QTY_QUOTE]) || 0,
+                cost_quote: Number(columns[cols.COST_QUOTE]) || 0,
+                linked_supplier: columns[cols.LINKED_SUPPLIER] || '',
+                linked_quote: quoteId,
+                // Mark as optimistic to handle UI states
+                _isOptimistic: true,
+            }
+
+            console.log({optimisticItem})
+            
+            // Optimistically update the cache
+            queryClient.setQueryData([QUERY_KEYS.LINE_ITEMS, 'quote', quoteId], (old: any[]) => {
+                if (!old) return [optimisticItem]
+                return [...old, optimisticItem]
+            })
+            
+            return { previousLineItems, tempId }
+        },
+        onError: (error, { quoteId }, context) => {
+            // If the mutation fails, use the context returned from onMutate to roll back
+            if (context?.previousLineItems) {
+                queryClient.setQueryData([QUERY_KEYS.LINE_ITEMS, 'quote', quoteId], context.previousLineItems)
+            }
+            toast.error("Erreur lors de la création de l'élément")
+        },
+        onSuccess: (data, { quoteId }, context) => {
+            // Update the cache with the real item data, replacing the temporary one
+            if (data && context?.tempId) {
+                queryClient.setQueryData([QUERY_KEYS.LINE_ITEMS, 'quote', quoteId], (old: any[]) => {
+                    if (!old) return old
+                    return old.map((item: any) => 
+                        item.id === context.tempId 
+                            ? { ...item, id: (data as any)?.id || data, _isOptimistic: false } // Replace temp ID with real ID
+                            : item
+                    )
+                })
+            }
+        },
+    })
+}
+
 export const useDeleteLineItemMutation = () => {
     const queryClient = useQueryClient();
 

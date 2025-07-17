@@ -41,6 +41,7 @@ const formSchema = z.object({
     BOARD_ACTIVITY_CODES: z.string().optional(),
     BOARD_TOOLS: z.string().optional(),
     BOARD_PRICE_REQUEST: z.string().optional(),
+    BOARD_PROJECTS: z.string().optional(),
 
     CATEGORY_TOOLS: z.string().optional(),
     CATEGORY_MO: z.string().optional(),
@@ -53,6 +54,19 @@ export default function SettingsForm({ initialConfig, debug = false }: { initial
 
 	const defaultValues = useMemo(() => {
         return {
+            BOARD_TAKEOFF: initialConfig?.BOARDS?.TAKEOFF || "",
+            BOARD_LINE_ITEMS: initialConfig?.BOARDS?.LINE_ITEMS || "",
+            BOARD_TEMPLATE_LINE_ITEMS: initialConfig?.BOARDS?.TEMPLATE_LINE_ITEMS || "",
+            BOARD_ADMIN_FEES: initialConfig?.BOARDS?.ADMIN_FEES || "",
+            BOARD_VARIABLES: initialConfig?.BOARDS?.VARIABLES || "",
+            BOARD_QUOTES: initialConfig?.BOARDS?.QUOTES || "",
+            BOARD_CONTRACTS: initialConfig?.BOARDS?.CONTRACTS || "",
+            BOARD_SUPPLIERS: initialConfig?.BOARDS?.SUPPLIERS || "",
+            BOARD_PRODUCTS: initialConfig?.BOARDS?.PRODUCTS || "",
+            BOARD_ACTIVITY_CODES: initialConfig?.BOARDS?.ACTIVITY_CODES || "",
+            BOARD_TOOLS: initialConfig?.BOARDS?.TOOLS || "",
+            BOARD_PRICE_REQUEST: initialConfig?.BOARDS?.PRICE_REQUEST || "",
+            BOARD_PROJECTS: initialConfig?.BOARDS?.PROJECTS || "",
             CATEGORY_TOOLS: initialConfig?.CATEGORIES?.TOOLS || "",
             CATEGORY_MO: initialConfig?.CATEGORIES?.MO || "",
         }
@@ -73,6 +87,7 @@ export default function SettingsForm({ initialConfig, debug = false }: { initial
             BOARD_ACTIVITY_CODES: initialConfig?.BOARDS?.ACTIVITY_CODES || "",
             BOARD_TOOLS: initialConfig?.BOARDS?.TOOLS || "",
             BOARD_PRICE_REQUEST: initialConfig?.BOARDS?.PRICE_REQUEST || "",
+            BOARD_PROJECTS: initialConfig?.BOARDS?.PROJECTS || "",
             CATEGORY_TOOLS: initialConfig?.CATEGORIES?.TOOLS || "",
             CATEGORY_MO: initialConfig?.CATEGORIES?.MO || "",
         }
@@ -98,6 +113,7 @@ export default function SettingsForm({ initialConfig, debug = false }: { initial
                 BOARD_ACTIVITY_CODES: values.BOARD_ACTIVITY_CODES || "",
                 BOARD_TOOLS: values.BOARD_TOOLS || "",
                 BOARD_PRICE_REQUEST: values.BOARD_PRICE_REQUEST || "",
+                BOARD_PROJECTS: values.BOARD_PROJECTS || "",
                 CATEGORY_TOOLS: values.CATEGORY_TOOLS || "",
                 CATEGORY_MO: values.CATEGORY_MO || "",
 			};
@@ -316,6 +332,22 @@ export default function SettingsForm({ initialConfig, debug = false }: { initial
 								<FormItem className="flex flex-col">
 									<FormLabel>
 										Demande de prix
+									</FormLabel>
+									<MondayBoardCombobox
+										onSelect={field.onChange}
+										value={field.value}
+									/>
+									<FormMessage />
+								</FormItem>
+							)}
+						/>
+                        <FormField
+							control={form.control}
+							name="BOARD_PROJECTS"
+							render={({ field }) => (
+								<FormItem className="flex flex-col">
+									<FormLabel>
+										Projets
 									</FormLabel>
 									<MondayBoardCombobox
 										onSelect={field.onChange}

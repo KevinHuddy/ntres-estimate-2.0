@@ -22,7 +22,7 @@ import Category from './category';
 
 import { createColumns, DeleteConfirmDialog } from './category/columns';
 import { toast } from 'sonner';
-import { useRenderTracker, RenderCounter } from '@/hooks/use-render-tracker';
+// import { useRenderTracker, RenderCounter } from '@/hooks/use-render-tracker';
 
 // Memoize the Category component to prevent unnecessary re-renders
 const MemoizedCategory = memo(Category);
@@ -33,45 +33,45 @@ export default function Takeoff() {
 	const itemId = context?.itemId;
 	
 	// Add detailed tracking for each piece of data
-	useRenderTracker('Takeoff-Context', { 
-		hasContext: !!context,
-		itemId: context?.itemId,
-		theme: context?.theme,
-		settingsExists: !!settings,
-		settingsKeys: settings ? Object.keys(settings).join(',') : 'none'
-	});
+	// useRenderTracker('Takeoff-Context', { 
+	// 	hasContext: !!context,
+	// 	itemId: context?.itemId,
+	// 	theme: context?.theme,
+	// 	settingsExists: !!settings,
+	// 	settingsKeys: settings ? Object.keys(settings).join(',') : 'none'
+	// });
 
 	const {
 		data: mappedLineItems,
 		isLoading: mappedLineItemsLoading,
 	} = useMappedLineItems(itemId);
 	
-	useRenderTracker('Takeoff-MappedLineItems', {
-		itemId,
-		dataLength: mappedLineItems?.length || 0,
-		isLoading: mappedLineItemsLoading,
-		hasData: !!mappedLineItems
-	});
+	// useRenderTracker('Takeoff-MappedLineItems', {
+	// 	itemId,
+	// 	dataLength: mappedLineItems?.length || 0,
+	// 	isLoading: mappedLineItemsLoading,
+	// 	hasData: !!mappedLineItems
+	// });
 
 	const { data: takeoff, isLoading: takeoffLoading } =
 		useTakeoffData(itemId);
 		
-	useRenderTracker('Takeoff-TakeoffData', {
-		itemId,
-		isLoading: takeoffLoading,
-		hasData: !!takeoff,
-		takeoffId: takeoff?.id
-	});
+	// useRenderTracker('Takeoff-TakeoffData', {
+	// 	itemId,
+	// 	isLoading: takeoffLoading,
+	// 	hasData: !!takeoff,
+	// 	takeoffId: takeoff?.id
+	// });
 
 	const { data: adminFees, isLoading: adminFeesLoading } =
 		useAdminFees(itemId);
 		
-	useRenderTracker('Takeoff-AdminFees', {
-		itemId,
-		isLoading: adminFeesLoading,
-		hasData: !!adminFees,
-		feesLength: adminFees?.length || 0
-	});
+	// useRenderTracker('Takeoff-AdminFees', {
+	// 	itemId,
+	// 	isLoading: adminFeesLoading,
+	// 	hasData: !!adminFees,
+	// 	feesLength: adminFees?.length || 0
+	// });
 
 	// Mutations
 	const createLineItemMutation = useCreateLineItemsMutation();
@@ -193,6 +193,16 @@ export default function Takeoff() {
 		return duplicatingItemsRef.current.has(itemId);
 	}, []);
 
+	// Calculate total from line items
+	const total = useMemo(() => {
+		if (!mappedLineItems) return 0;
+		return mappedLineItems.reduce((sum, item) => {
+			const cost = Number(item.cost_takeoff) || 0;
+			const qty = Number(item.qty_takeoff) || 0;
+			return sum + (cost * qty);
+		}, 0);
+	}, [mappedLineItems]);
+
 	// Create columns with stable references - only recreate when handlers change
 	const columns = useMemo(
 		() =>
@@ -259,7 +269,7 @@ export default function Takeoff() {
 	return (
 		<>
         {/* <pre className="text-white">{JSON.stringify(settings, null, 2)}</pre> */}
-			<RenderCounter name="Takeoff" />
+			{/* <RenderCounter name="Takeoff" /> */}
             {/* <pre className="text-white">{JSON.stringify(takeoff, null, 2)}</pre> */}
 			<Header>
 				{!takeoff?.disabled && (
@@ -268,6 +278,8 @@ export default function Takeoff() {
 						selectedRows={selectedRows}
 						mappedLineItems={mappedLineItems}
 						projectId={takeoff?.project?.id}
+						takeoffId={itemId}
+						total={total}
 					/>
 				)}
 			</Header>
