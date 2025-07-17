@@ -89,7 +89,7 @@ export const useCreatePriceRequestSubitem = () => {
                 qty, 
                 unitType, 
                 lineId, 
-                takeoffId 
+                takeoffId
             });
             
             return await client.subitems.create({
@@ -98,7 +98,7 @@ export const useCreatePriceRequestSubitem = () => {
                 createLabels: true,
                 columnValues: {
                     [cols.QTY]: qty,
-                    [cols.UNIT_TYPE]: unitType,
+                    // [cols.UNIT_TYPE]: unitType,
                     [cols.LINKED_LINE_ITEM]: lineId.toString(),
                     [cols.LINKED_TAKEOFF]: takeoffId.toString(),
                     [cols.LINKED_PRODUCT]: productId || null,

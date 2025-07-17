@@ -389,6 +389,78 @@ export const useCreateLineItemsForQuoteMutation = () => {
     })
 }
 
+export const useDeleteLineItemFromQuoteMutation = () => {
+    const { settings } = useMonday();
+    const { cols, boardId} = getBoardSettings(settings, "LINE_ITEMS")
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: async ({
+            id,
+            quoteId,
+            hasTakeoffData
+        }: {
+            id: string
+            quoteId: string
+            hasTakeoffData: boolean
+        }) => {
+            console.log({id, quoteId, hasTakeoffData})
+            try {
+                if (hasTakeoffData) {
+                    // If item has takeoff data, just unlink it from the quote
+                    const response = await client.items.update({
+                        itemId: id,
+                        boardId: boardId,
+                        columnValues: {
+                            [cols.LINKED_QUOTE]: '', // Clear the linked_quote field
+                        }
+                    })
+                    return { action: 'unlinked', response }
+                } else {
+                    // If no takeoff data, delete the item completely
+                    const response = await client.items.delete({
+                        itemId: id,
+                    })
+                    return { action: 'deleted', response }
+                }
+            } catch (error) {
+                console.error(error)
+                toast.error("Failed to remove line item from quote")
+                return null
+            }
+        },
+        onMutate: async ({ id, quoteId, hasTakeoffData }) => {
+            // Cancel any outgoing refetches for quote-specific queries
+            await queryClient.cancelQueries({ queryKey: [QUERY_KEYS.LINE_ITEMS, 'quote', quoteId] })
+            
+            // Snapshot the previous value
+            const previousLineItems = queryClient.getQueryData([QUERY_KEYS.LINE_ITEMS, 'quote', quoteId])
+            
+            // Optimistically remove the item from the quote cache (both cases result in removal from quote)
+            queryClient.setQueryData([QUERY_KEYS.LINE_ITEMS, 'quote', quoteId], (old: any[]) => {
+                if (!old) return old
+                return old.filter((item: any) => item.id !== id)
+            })
+            
+            return { previousLineItems, hasTakeoffData }
+        },
+        onError: (error, { quoteId }, context) => {
+            // If the mutation fails, use the context returned from onMutate to roll back
+            if (context?.previousLineItems) {
+                queryClient.setQueryData([QUERY_KEYS.LINE_ITEMS, 'quote', quoteId], context.previousLineItems)
+            }
+            toast.error("Erreur lors de la suppression de l'élément du devis")
+        },
+        onSuccess: (data) => {
+            if (data?.action === 'unlinked') {
+                toast.success('Élément dissocié du devis (données de métré conservées)')
+            } else if (data?.action === 'deleted') {
+                toast.success('Élément supprimé avec succès')
+            }
+        },
+    })
+}
+
 export const useDeleteLineItemMutation = () => {
     const queryClient = useQueryClient();
 

@@ -29,6 +29,7 @@ const query = `
         $productsBoardId: [ID!]
         $priceRequestBoardId: [ID!]
         $projectsBoardId: [ID!]
+        $quotesBoardId: [ID!]
     ) {
         complexity {
             before
@@ -42,14 +43,17 @@ const query = `
         products: boards(ids: $productsBoardId) { ...ColumnsFragment }
         priceRequest: boards(ids: $priceRequestBoardId) { ...ColumnsFragment }
         projects: boards(ids: $projectsBoardId) { ...ColumnsFragment }
+        quotes: boards(ids: $quotesBoardId) { ...ColumnsFragment }
     }`
 
 const subQuery = `
     ${columnFragment}
     query getSubColumnSettings (
         $priceRequestSubBoardId: [ID!]
+        $projectsSubBoardId: [ID!]
     ) {
         priceRequest: boards(ids: $priceRequestSubBoardId) { ...ColumnsFragment }
+        projects: boards(ids: $projectsSubBoardId) { ...ColumnsFragment }
     }`
 
 
@@ -71,6 +75,7 @@ const COLUMNS = ({
     priceRequestCols,
     priceRequestSubCols,
     projectsSubCols,
+    quotesCols,
 }: {
     takeoffCols: any,
     templateLineItemsCols: any,
@@ -81,8 +86,17 @@ const COLUMNS = ({
     priceRequestCols: any,
     priceRequestSubCols: any,
     projectsSubCols: any,
+    quotesCols: any,
 }) => {
     return {
+        QUOTES: {
+            TOTAL: getColId(quotesCols, "{{{total}}}"),
+            LINKED_PROJECT: getColId(quotesCols, "{{{linked_project}}}"),
+            LINKED_TAKEOFF: getColId(quotesCols, "{{{linked_takeoff}}}"),
+            LINKED_CONTRACT: getColId(quotesCols, "{{{linked_contract}}}"),
+            LINKED_PROJECT_SUBITEM: getColId(quotesCols, "{{{linked_project_sub}}}"),
+            FEE: getColIds(quotesCols, "{{{fee}}}"),
+        },
         TAKEOFF: {
             TOTAL: getColId(takeoffCols, "{{{ntr.takeoff.total}}}"),
             LINKED_PROJECT: getColId(takeoffCols, "{{{ntr.takeoff.linked_project}}}"),
@@ -126,7 +140,7 @@ const COLUMNS = ({
             LINKED_ACTIVITY_CODE: getColId(lineItemsCols, "{{{activity_code}}}"),
             LINKED_TAKEOFF: getColId(lineItemsCols, "{{{linked_takeoff}}}"),
             LINKED_QUOTE: getColId(lineItemsCols, "{{{linked_quote}}}"),
-            LINKED_PROJECT: getColId(lineItemsCols, "{{{linked_project}}}"),
+            // LINKED_PROJECT: getColId(lineItemsCols, "{{{linked_project}}}"),
             LINKED_PRODUCT: getColId(lineItemsCols, "{{{linked_product}}}"),
             LINKED_TEMPLATE_LINE_ITEM: getColId(lineItemsCols, "{{{linked_template_line_item}}}"),
             LINKED_SUPPLIER: getColId(lineItemsCols, "{{{linked_supplier}}}"),
@@ -189,6 +203,7 @@ export const useGetSettings = (options: any = {}): UseQueryResult<any> => {
                         productsBoardId: mainSettings?.BOARD_PRODUCTS,
                         priceRequestBoardId: mainSettings?.BOARD_PRICE_REQUEST,
                         projectsBoardId: mainSettings?.BOARD_PROJECTS,
+                        quotesBoardId: mainSettings?.BOARD_QUOTES,
                     }
                 })
 
@@ -223,6 +238,7 @@ export const useGetSettings = (options: any = {}): UseQueryResult<any> => {
                     priceRequestCols: columnSettings?.data?.priceRequest?.[0]?.columns,
                     priceRequestSubCols: subColumnSettings?.data?.priceRequest?.[0]?.columns,
                     projectsSubCols: subColumnSettings?.data?.projects?.[0]?.columns,
+                    quotesCols: columnSettings?.data?.quotes?.[0]?.columns,
                 })
 
                 return {

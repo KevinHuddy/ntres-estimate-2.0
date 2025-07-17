@@ -33,22 +33,20 @@ export function useCreateQuote() {
           boardId: quoteBoardId,
           columnValues: {
             [quoteCols.TOTAL]: data.total.toString(),
-            [quoteCols.PROJECT_SUBITEM]: data.project_subitem,
-            [quoteCols.PROJECT]: data.project,
-            [quoteCols.TAKEOFF]: data.takeoff,
+            [quoteCols.LINKED_PROJECT_SUBITEM]: data.project_subitem,
+            [quoteCols.LINKED_PROJECT]: data.project,
+            [quoteCols.LINKED_TAKEOFF]: data.takeoff
           }
         });
 
-        // Get line items for this takeoff
         const lineItems = await client.items.listByColumnValues({
           boardId: lineItemBoardId,
           columns: {
-            [lineItemCols.LINKED_TAKEOFF]: data.takeoff
+            [lineItemCols.LINKED_TAKEOFF]: data.takeoff.toString()
           },
           columnIds: ['name']
         });
 
-        // Update all line items to link to the new quote
         await Promise.all(lineItems.map(async (item: any) => {
           await client.items.update({
             boardId: lineItemBoardId,
@@ -59,7 +57,7 @@ export function useCreateQuote() {
           });
         }));
 
-        toast.success("Quote created successfully");
+        toast.success("Soumission créée avec succès");
         return response;
       } catch (error) {
         console.error("❌ Error creating quote", error);

@@ -4,7 +4,7 @@ import { useMonday } from '@/components/monday-context-provider';
 import { useLineItemsByQuote } from '@/hooks/queries';
 import { useSuppliers } from '@/hooks/queries/use-suppliers';
 import { useProducts } from '@/hooks/queries/use-products';
-import { useDeleteLineItemMutation, useCreateLineItemsForQuoteMutation } from '@/hooks/mutations/use-line-items';
+import { useDeleteLineItemFromQuoteMutation, useCreateLineItemsForQuoteMutation } from '@/hooks/mutations/use-line-items';
 import { Loading } from '@/components/loading';
 import { DataTable } from '@/app/takeoff/data-table';
 import { createQuoteColumns, DeleteConfirmDialog } from './columns';
@@ -27,10 +27,10 @@ import {
     PopoverContent,
     PopoverTrigger,
 } from '@/components/ui/popover';
-import { formatCurrency } from '@/lib/utils';
+import { formatCurrency, getBoardSettings } from '@/lib/utils';
 
 export default function Quote() {
-    const { context } = useMonday();
+    const { context, settings } = useMonday();
     const itemId = context?.itemId;
     
     // Fetch line items for this quote
@@ -43,7 +43,7 @@ export default function Quote() {
     const { data: products } = useProducts();
     
     // Mutations
-    const deleteLineItemMutation = useDeleteLineItemMutation();
+    const deleteLineItemMutation = useDeleteLineItemFromQuoteMutation();
     const createLineItemMutation = useCreateLineItemsForQuoteMutation();
     
     // Selection state management
@@ -76,6 +76,8 @@ export default function Quote() {
         if (!lineItems) return [];
         return lineItems.map((item: any) => ({
             ...item,
+            qty_quote: item.qty_quote || item.qty_takeoff || 0,
+            cost_quote: item.cost_quote || item.cost_takeoff || 0,
             supplierName: item.linked_supplier ? supplierNameMap[item.linked_supplier] : null
         }));
     }, [lineItems, supplierNameMap]);
@@ -149,13 +151,15 @@ export default function Quote() {
         try {
             const duplicateName = `${row.name} (Copie)`;
             
+            // Get proper column IDs from settings
+            const { cols } = getBoardSettings(settings, "LINE_ITEMS");
             const columns = {
-                category: row.category || '',
-                type: row.type || '',
-                unit_type: row.unit_type || '',
-                qty_quote: (row.qty_quote || 0).toString(),
-                cost_quote: (row.cost_quote || 0).toString(),
-                linked_supplier: row.linked_supplier || '',
+                [cols.CATEGORY]: row.category || '',
+                [cols.TYPE]: row.type || '',
+                [cols.UNIT_TYPE]: row.unit_type || '',
+                [cols.QTY_QUOTE]: (row.qty_quote || 0).toString(),
+                [cols.COST_QUOTE]: (row.cost_quote || 0).toString(),
+                [cols.LINKED_SUPPLIER]: row.linked_supplier || '',
             };
 
             await createLineItemMutation.mutateAsync({
@@ -169,23 +173,27 @@ export default function Quote() {
             console.error('Error duplicating line item:', error);
             toast.error('Erreur lors de la duplication');
         }
-    }, [createLineItemMutation, itemId]);
+    }, [createLineItemMutation, itemId, settings]);
     
     // Handle delete
     const handleDelete = useCallback(async (id: string) => {
         try {
+            // Check if the item has takeoff data by looking for linked_takeoff field
+            const itemToDelete = enrichedLineItems?.find(item => item.id === id);
+            const hasTakeoffData = !!(itemToDelete?.linked_takeoff);
+
             await deleteLineItemMutation.mutateAsync({
                 id,
-                takeoffId: itemId || '', // Using itemId as the quote ID
+                quoteId: itemId || '', // Using itemId as the quote ID
+                hasTakeoffData,
             });
-            toast.success('Élément supprimé avec succès');
             setDeleteDialogOpen(false);
             setDeleteItem(null);
         } catch (error) {
             console.error('Error deleting line item:', error);
             toast.error('Erreur lors de la suppression');
         }
-    }, [deleteLineItemMutation, itemId]);
+    }, [deleteLineItemMutation, itemId, enrichedLineItems]);
     
     // Handle delete confirmation
     const handleDeleteConfirm = useCallback(() => {
@@ -245,12 +253,13 @@ export default function Quote() {
             cost_quote: 0,
             linked_supplier: '',
             qty_quote: 0,
+            linked_quote: itemId,
         };
         
         setSelectedItem(newItem);
         setEditModalOpen(true);
         setProductSelectOpen(false);
-    }, [selectedCategory]);
+    }, [selectedCategory, itemId]);
 
     // Create columns
     const columns = useMemo(

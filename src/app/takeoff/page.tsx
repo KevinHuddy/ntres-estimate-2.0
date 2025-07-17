@@ -253,12 +253,15 @@ export default function Takeoff() {
 		{
 			label: 'Projet',
 			component: (
-				<Intro
-					takeoff={takeoff}
-					adminFees={adminFees}
-					lines={mappedLineItems}
-					categories={categories}
-				/>
+                <>
+                {/* <pre className="text-white">{JSON.stringify(settings, null, 2)}</pre> */}
+                    <Intro
+                        takeoff={takeoff}
+                        adminFees={adminFees}
+                        lines={mappedLineItems}
+                        categories={categories}
+                    />
+                </>
 			),
 		},
 		...categoryPages,

@@ -3,9 +3,11 @@
 import { CACHE_TIMES, QUERY_KEYS } from "@/utils/constants"
 import { useMonday } from "@/components/monday-context-provider"
 import { useQuery, UseQueryResult } from "@tanstack/react-query"
+import { getBoardSettings } from "@/lib/utils"
 
 export const useQuotes = (projectId: string, options: any = {}): UseQueryResult<any> => {
     const { settings, monday } = useMonday()
+    const { cols: settingsCols } = getBoardSettings(settings, "PROJECTS_SUB")
     
     return useQuery({
         queryKey: [QUERY_KEYS.QUOTES, projectId],
@@ -45,7 +47,6 @@ export const useQuotes = (projectId: string, options: any = {}): UseQueryResult<
 
             const mappedItems = items?.map((item) => {
                 const cols = item?.column_values
-                const settingsCols = settings?.COLUMNS?.PROJECTS_SUB
 
                 return {
                     id: item?.id,
@@ -53,7 +54,9 @@ export const useQuotes = (projectId: string, options: any = {}): UseQueryResult<
                     total: getColValue(cols, settingsCols?.NUMBER)?.text || 0,
                     quote: getColValue(cols, settingsCols?.LINKED_QUOTE)?.linked_items?.map(i => i?.id) || [],
                 }
-            })
+            }).filter(i => !i?.quote?.length)
+
+            console.log({settingsCols, mappedItems});
 
             quotes.push(...(mappedItems || []))
 
